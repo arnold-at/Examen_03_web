@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: header}"></head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<div class="d-flex">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-content flex-grow-1 p-4">
+        <div class="mb-4">
+            <h2 class="mb-1">
+                <i class="fas fa-tachometer-alt me-2 text-primary-custom"></i>Panel de Control
+            </h2>
+            <p class="text-muted mb-0">Bienvenido al sistema de gestión del restaurante</p>
+        </div>
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-left-warning h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-muted small mb-2">Pedidos Pendientes</div>
+                                <div class="h3 mb-0 text-warning" th:text="${pedidosPendientes}">0</div>
+                            </div>
+                            <div class="text-warning">
+                                <i class="fas fa-hourglass-half fa-3x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top">
+                        <a href="/pedidos?estado=PENDIENTE" class="btn btn-sm btn-warning w-100">
+                            <i class="fas fa-eye me-1"></i>Ver Pedidos
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-left-info h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-muted small mb-2">En Preparación</div>
+                                <div class="h3 mb-0 text-info" th:text="${pedidosEnPreparacion}">0</div>
+                            </div>
+                            <div class="text-info">
+                                <i class="fas fa-spinner fa-3x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top">
+                        <a href="/pedidos?estado=EN_PREPARACION" class="btn btn-sm btn-info w-100">
+                            <i class="fas fa-eye me-1"></i>Ver Pedidos
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-left-success h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-muted small mb-2">Mesas Disponibles</div>
+                                <div class="h3 mb-0 text-success" th:text="${mesasDisponibles}">0</div>
+                            </div>
+                            <div class="text-success">
+                                <i class="fas fa-chair fa-3x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top">
+                        <a href="/mesas" class="btn btn-sm btn-success w-100">
+                            <i class="fas fa-eye me-1"></i>Ver Mesas
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-left-primary h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-muted small mb-2">Ventas del Día</div>
+                                <div class="h3 mb-0 text-primary">
+                                    S/ <span th:text="${#numbers.formatDecimal(ventasDelDia ?: 0, 1, 2)}">0.00</span>
+                                </div>
+                            </div>
+                            <div class="text-primary">
+                                <i class="fas fa-dollar-sign fa-3x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top">
+                        <a href="/reportes/ventas" class="btn btn-sm btn-primary w-100" sec:authorize="hasAnyRole('ADMIN', 'CAJERO')">
+                            <i class="fas fa-chart-line me-1"></i>Ver Reportes
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">
+                <i class="fas fa-th-large me-2"></i>Módulos del Sistema
+            </h4>
+        </div>
+        <div class="row">
+            <div class="col-md-4 col-lg-3 mb-4" sec:authorize="hasAnyRole('ADMIN','MOZO','CAJERO')">
+                <div class="card module-card h-100 border-primary">
+                    <div class="card-body text-center">
+                        <div class="module-icon mb-3 text-primary">
+                            <i class="fas fa-receipt fa-4x"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Gestión de Pedidos</h5>
+                        <p class="card-text text-muted small">Crear, editar y administrar pedidos del restaurante</p>
+                    </div>
+                    <div class="card-footer bg-white border-top">
+                        <a href="/pedidos" class="btn btn-primary-custom w-100">
+                            <i class="fas fa-arrow-right me-2"></i>Acceder
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-3 mb-4" sec:authorize="hasAnyRole('ADMIN','COCINERO','MOZO')">
+                <div class="card module-card h-100 border-danger">
+                    <div class="card-body text-center">
+                        <div class="module-icon mb-3 text-danger">
+                            <i class="fas fa-fire fa-4x"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Vista de Cocina</h5>
+                        <p class="card-text text-muted small">Ver pedidos pendientes y en preparación</p>
+                    </div>
+                    <div class="card-footer bg-white border-top">
+                        <a href="/pedidos/cocina" class="btn btn-danger w-100">
+                            <i class="fas fa-arrow-right me-2"></i>Acceder
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-3 mb-4" sec:authorize="hasAnyRole('ADMIN','MOZO')">
+                <div class="card module-card h-100 border-success">
+                    <div class="card-body text-center">
+                        <div class="module-icon mb-3 text-success">
+                            <i class="fas fa-chair fa-4x"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Gestión de Mesas</h5>
+                        <p class="card-text text-muted small">Administrar el estado de las mesas</p>
+                    </div>
+                    <div class="card-footer bg-white border-top">
+                        <a href="/mesas" class="btn btn-success w-100">
+                            <i class="fas fa-arrow-right me-2"></i>Acceder
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-3 mb-4">
+                <div class="card module-card h-100 border-warning">
+                    <div class="card-body text-center">
+                        <div class="module-icon mb-3 text-warning">
+                            <i class="fas fa-pizza-slice fa-4x"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Menú / Platos</h5>
+                        <p class="card-text text-muted small">Ver y administrar el catálogo de platos</p>
+                    </div>
+                    <div class="card-footer bg-white border-top">
+                        <a href="/platos" class="btn btn-warning w-100">
+                            <i class="fas fa-arrow-right me-2"></i>Acceder
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-3 mb-4" sec:authorize="hasAnyRole('ADMIN','MOZO','CAJERO')">
+                <div class="card module-card h-100 border-info">
+                    <div class="card-body text-center">
+                        <div class="module-icon mb-3 text-info">
+                            <i class="fas fa-users fa-4x"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Clientes</h5>
+                        <p class="card-text text-muted small">Administrar base de datos de clientes</p>
+                    </div>
+                    <div class="card-footer bg-white border-top">
+                        <a href="/clientes" class="btn btn-info w-100">
+                            <i class="fas fa-arrow-right me-2"></i>Acceder
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-3 mb-4" sec:authorize="hasAnyRole('ADMIN','CAJERO')">
+                <div class="card module-card h-100 border-secondary">
+                    <div class="card-body text-center">
+                        <div class="module-icon mb-3 text-secondary">
+                            <i class="fas fa-file-invoice-dollar fa-4x"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Facturación</h5>
+                        <p class="card-text text-muted small">Gestión de facturas y pagos</p>
+                    </div>
+                    <div class="card-footer bg-white border-top">
+                        <a href="/facturas" class="btn btn-secondary w-100">
+                            <i class="fas fa-arrow-right me-2"></i>Acceder
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-3 mb-4" sec:authorize="hasRole('ADMIN')">
+                <div class="card module-card h-100 border-dark">
+                    <div class="card-body text-center">
+                        <div class="module-icon mb-3 text-dark">
+                            <i class="fas fa-box fa-4x"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Inventario</h5>
+                        <p class="card-text text-muted small">Control de stock e insumos</p>
+                    </div>
+                    <div class="card-footer bg-white border-top">
+                        <a href="/insumos" class="btn btn-dark w-100">
+                            <i class="fas fa-arrow-right me-2"></i>Acceder
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-3 mb-4" sec:authorize="hasAnyRole('ADMIN','CAJERO')">
+                <div class="card module-card h-100" style="border-color: #6f42c1; border-width: 2px;">
+                    <div class="card-body text-center">
+                        <div class="module-icon mb-3" style="color: #6f42c1;">
+                            <i class="fas fa-chart-bar fa-4x"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Reportes</h5>
+                        <p class="card-text text-muted small">Estadísticas y reportes de ventas</p>
+                    </div>
+                    <div class="card-footer bg-white border-top">
+                        <a href="/reportes/ventas" class="btn w-100" style="background-color: #6f42c1; color: white;">
+                            <i class="fas fa-arrow-right me-2"></i>Acceder
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:replace="~{fragments/footer :: footer}"></div>
+<style>
+    .module-card {
+        transition: all 0.3s ease;
+        border-width: 2px;
+    }
+    .module-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    .module-icon { transition: transform 0.3s ease; }
+    .module-card:hover .module-icon { transform: scale(1.1); }
+    .module-card { animation: fadeInUp 0.5s ease-in-out; }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+</body>
+</html>

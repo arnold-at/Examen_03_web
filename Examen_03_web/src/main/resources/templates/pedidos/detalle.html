@@ -1,10 +1,472 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: header}"></head>
 <body>
+<!-- Navbar -->
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
+<div class="d-flex">
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <!-- Main Content -->
+    <div class="main-content flex-grow-1 p-4">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="/mesas">Mesas</a></li>
+                <li class="breadcrumb-item active" th:text="'Mesa ' + ${mesa.numero}">Mesa 1</li>
+            </ol>
+        </nav>
+
+        <!-- Header con Acciones -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">
+                    <i class="fas fa-chair me-2"></i>
+                    Mesa <span th:text="${mesa.numero}">1</span>
+                </h2>
+                <span class="badge fs-6"
+                      th:classappend="${mesa.estado.name() == 'DISPONIBLE'} ? 'badge-disponible' :
+                                          ${mesa.estado.name() == 'OCUPADA'} ? 'badge-ocupada' : 'badge-reservada'"
+                      th:text="${mesa.estado.name()}">
+                        DISPONIBLE
+                    </span>
+            </div>
+            <div>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-success"
+                            th:if="${mesa.estado.name() == 'DISPONIBLE'}"
+                            onclick="crearPedido()"
+                            sec:authorize="hasAnyRole('ADMIN', 'MOZO')">
+                        <i class="fas fa-plus me-2"></i>Crear Pedido
+                    </button>
+                    <button type="button" class="btn btn-warning"
+                            th:if="${mesa.estado.name() == 'DISPONIBLE'}"
+                            onclick="reservarMesa()"
+                            sec:authorize="hasAnyRole('ADMIN', 'MOZO')">
+                        <i class="fas fa-bookmark me-2"></i>Reservar
+                    </button>
+                    <button type="button" class="btn btn-info"
+                            th:if="${mesa.estado.name() == 'OCUPADA'}"
+                            onclick="verPedidoActivo()"
+                            sec:authorize="hasAnyRole('ADMIN', 'MOZO')">
+                        <i class="fas fa-receipt me-2"></i>Ver Pedido Activo
+                    </button>
+                    <a th:href="@{/mesas/{id}/editar(id=${mesa.id})}"
+                       class="btn btn-primary"
+                       sec:authorize="hasRole('ADMIN')">
+                        <i class="fas fa-edit me-2"></i>Editar
+                    </a>
+                    <button type="button" class="btn btn-secondary" onclick="history.back()">
+                        <i class="fas fa-arrow-left me-2"></i>Volver
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Información de la Mesa -->
+            <div class="col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Información General
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Icono de Mesa -->
+                        <div class="text-center mb-4">
+                            <div class="mesa-icon-large">
+                                <i class="fas fa-chair fa-5x"
+                                   th:classappend="${mesa.estado.name() == 'DISPONIBLE'} ? 'text-success' :
+                                                       ${mesa.estado.name() == 'OCUPADA'} ? 'text-danger' : 'text-warning'">
+                                </i>
+                            </div>
+                        </div>
+
+                        <!-- Detalles -->
+                        <div class="info-row">
+                            <label><i class="fas fa-hashtag me-2"></i>Número:</label>
+                            <span th:text="${mesa.numero}">1</span>
+                        </div>
+
+                        <div class="info-row">
+                            <label><i class="fas fa-users me-2"></i>Capacidad:</label>
+                            <span th:text="${mesa.capacidad} + ' personas'">4 personas</span>
+                        </div>
+
+                        <div class="info-row" th:if="${mesa.ubicacion}">
+                            <label><i class="fas fa-map-marker-alt me-2"></i>Ubicación:</label>
+                            <span th:text="${mesa.ubicacion}">Planta Baja</span>
+                        </div>
+
+                        <div class="info-row">
+                            <label><i class="fas fa-info-circle me-2"></i>Estado:</label>
+                            <span class="badge"
+                                  th:classappend="${mesa.estado.name() == 'DISPONIBLE'} ? 'badge-disponible' :
+                                                      ${mesa.estado.name() == 'OCUPADA'} ? 'badge-ocupada' : 'badge-reservada'"
+                                  th:text="${mesa.estado.name()}">
+                                    DISPONIBLE
+                                </span>
+                        </div>
+
+                        <div class="info-row" th:if="${mesa.observaciones}">
+                            <label><i class="fas fa-sticky-note me-2"></i>Observaciones:</label>
+                            <span th:text="${mesa.observaciones}">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estadísticas de la Mesa -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>Estadísticas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <i class="fas fa-receipt text-primary me-2"></i>
+                                Total de Pedidos
+                            </div>
+                            <div class="stat-value" th:text="${totalPedidos}">0</div>
+                        </div>
+
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <i class="fas fa-dollar-sign text-success me-2"></i>
+                                Ingresos Totales
+                            </div>
+                            <div class="stat-value">
+                                S/ <span th:text="${#numbers.formatDecimal(ingresosTotales, 1, 2)}">0.00</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <i class="fas fa-users text-info me-2"></i>
+                                Promedio de Comensales
+                            </div>
+                            <div class="stat-value" th:text="${promedioComensales}">0</div>
+                        </div>
+
+                        <div class="stat-item mb-0">
+                            <div class="stat-label">
+                                <i class="fas fa-clock text-warning me-2"></i>
+                                Último Uso
+                            </div>
+                            <div class="stat-value small" th:text="${ultimoUso} ?: 'Nunca'">
+                                Nunca
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Historial de Pedidos -->
+            <div class="col-lg-8 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2"></i>Historial de Pedidos
+                        </h5>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-outline-primary active"
+                                    onclick="filtrarPedidos('todos')">
+                                Todos
+                            </button>
+                            <button type="button" class="btn btn-outline-success"
+                                    onclick="filtrarPedidos('CERRADO')">
+                                Cerrados
+                            </button>
+                            <button type="button" class="btn btn-outline-warning"
+                                    onclick="filtrarPedidos('PENDIENTE')">
+                                Pendientes
+                            </button>
+                            <button type="button" class="btn btn-outline-danger"
+                                    onclick="filtrarPedidos('CANCELADO')">
+                                Cancelados
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Tabla de Pedidos -->
+                        <div class="table-responsive" th:if="${!#lists.isEmpty(pedidos)}">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th>Pedido #</th>
+                                    <th>Fecha</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                                </thead>
+                                <tbody id="pedidosTableBody">
+                                <tr th:each="pedido : ${pedidos}"
+                                    th:attr="data-estado=${pedido.estado.name()}">
+                                    <td>
+                                        <strong>#<span th:text="${pedido.id}">001</span></strong>
+                                    </td>
+                                    <td>
+                                                <span th:text="${#temporals.format(pedido.fechaCreacion, 'dd/MM/yyyy HH:mm')}">
+                                                    01/01/2024 12:00
+                                                </span>
+                                    </td>
+                                    <td>
+                                        <strong>S/ <span th:text="${#numbers.formatDecimal(pedido.total, 1, 2)}">
+                                                    0.00
+                                                </span></strong>
+                                    </td>
+                                    <td>
+                                                <span class="badge"
+                                                      th:classappend="${pedido.estado.name() == 'PENDIENTE'} ? 'badge-pendiente' :
+                                                                      ${pedido.estado.name() == 'EN_PREPARACION'} ? 'badge-preparacion' :
+                                                                      ${pedido.estado.name() == 'SERVIDO'} ? 'badge-servido' :
+                                                                      ${pedido.estado.name() == 'CERRADO'} ? 'badge-cerrado' : 'badge-cancelado'"
+                                                      th:text="${pedido.estado.name()}">
+                                                    PENDIENTE
+                                                </span>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{/pedidos/{id}(id=${pedido.id})}"
+                                           class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i> Ver
+                                        </a>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Mensaje cuando no hay pedidos -->
+                        <div class="alert alert-info text-center" th:if="${#lists.isEmpty(pedidos)}">
+                            <i class="fas fa-info-circle fa-2x mb-3"></i>
+                            <h5>No hay pedidos registrados</h5>
+                            <p class="mb-0">Esta mesa aún no tiene pedidos en el historial</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pedido Activo -->
+                <div class="card mt-4" th:if="${pedidoActivo != null}">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Pedido Activo
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <strong>Pedido #:</strong>
+                                    <span th:text="${pedidoActivo.id}">001</span>
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Estado:</strong>
+                                    <span class="badge"
+                                          th:classappend="${pedidoActivo.estado.name() == 'PENDIENTE'} ? 'badge-pendiente' :
+                                                              ${pedidoActivo.estado.name() == 'EN_PREPARACION'} ? 'badge-preparacion' : 'badge-servido'"
+                                          th:text="${pedidoActivo.estado.name()}">
+                                            PENDIENTE
+                                        </span>
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <strong>Total:</strong>
+                                    S/ <span th:text="${#numbers.formatDecimal(pedidoActivo.total, 1, 2)}">0.00</span>
+                                </p>
+                                <p class="mb-0">
+                                    <strong>Mesero:</strong>
+                                    <span th:text="${pedidoActivo.usuario.username}">Usuario</span>
+                                </p>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="d-grid gap-2">
+                            <a th:href="@{/pedidos/{id}(id=${pedidoActivo.id})}"
+                               class="btn btn-primary">
+                                <i class="fas fa-eye me-2"></i>Ver Pedido Completo
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script th:inline="javascript">
+    const mesaId = /*[[${mesa.id}]]*/ 0;
+
+    // Crear pedido para esta mesa
+    function crearPedido() {
+        window.location.href = `/pedidos/nuevo?mesaId=${mesaId}`;
+    }
+
+    // Ver pedido activo
+    function verPedidoActivo() {
+        const pedidoActivoId = /*[[${pedidoActivo?.id}]]*/ null;
+        if (pedidoActivoId) {
+            window.location.href = `/pedidos/${pedidoActivoId}`;
+        }
+    }
+
+    // Reservar mesa
+    function reservarMesa() {
+        Swal.fire({
+            title: 'Reservar Mesa',
+            html: `
+                    <div class="text-start">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre del cliente</label>
+                            <input id="nombreCliente" class="form-control" placeholder="Juan Pérez">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Teléfono</label>
+                            <input id="telefonoCliente" class="form-control" placeholder="987654321">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Fecha y hora de reserva</label>
+                            <input id="fechaReserva" type="datetime-local" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones (opcional)</label>
+                            <textarea id="observacionesReserva" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                `,
+            confirmButtonText: 'Reservar',
+            confirmButtonColor: '#ff6b35',
+            showCancelButton: true,
+            cancelButtonText: 'Cancelar',
+            width: '600px',
+            preConfirm: () => {
+                const nombre = document.getElementById('nombreCliente').value;
+                const telefono = document.getElementById('telefonoCliente').value;
+                const fecha = document.getElementById('fechaReserva').value;
+
+                if (!nombre || !telefono || !fecha) {
+                    Swal.showValidationMessage('Por favor complete todos los campos obligatorios');
+                    return false;
+                }
+
+                return {
+                    nombre: nombre,
+                    telefono: telefono,
+                    fecha: fecha,
+                    observaciones: document.getElementById('observacionesReserva').value
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/mesas/${mesaId}/reservar`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(result.value)
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Reservada!',
+                                text: 'La mesa ha sido reservada correctamente',
+                                timer: 2000
+                            }).then(() => location.reload());
+                        } else {
+                            throw new Error('Error al reservar');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire('Error', 'No se pudo reservar la mesa', 'error');
+                    });
+            }
+        });
+    }
+
+    // Filtrar pedidos por estado
+    function filtrarPedidos(estado) {
+        const rows = document.querySelectorAll('#pedidosTableBody tr');
+        const buttons = document.querySelectorAll('.btn-group button');
+
+        // Actualizar botones activos
+        buttons.forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+
+        // Filtrar filas
+        rows.forEach(row => {
+            if (estado === 'todos') {
+                row.style.display = '';
+            } else {
+                const rowEstado = row.getAttribute('data-estado');
+                row.style.display = rowEstado === estado ? '' : 'none';
+            }
+        });
+    }
+</script>
+
+<style>
+    .mesa-icon-large {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto;
+        border-radius: 50%;
+        background-color: rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-row label {
+        font-weight: 500;
+        margin-bottom: 0;
+        color: #6c757d;
+    }
+
+    .stat-item {
+        padding: 15px 0;
+        border-bottom: 1px solid #e9ecef;
+        margin-bottom: 15px;
+    }
+
+    .stat-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #333;
+    }
+</style>
 </body>
 </html>

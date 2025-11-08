@@ -1,10 +1,403 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: header}"></head>
 <body>
-
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<div class="d-flex">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-content flex-grow-1 p-4">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                <li class="breadcrumb-item active">Mesas</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1"><i class="fas fa-chair me-2 text-primary-custom"></i>Gestión de Mesas</h2>
+                <p class="text-muted mb-0">Administra las mesas del restaurante</p>
+            </div>
+            <div>
+                <button class="btn btn-primary-custom" onclick="location.href='/mesas/crear'"
+                        sec:authorize="hasRole('ADMIN')">
+                    <i class="fas fa-plus me-2"></i>Nueva Mesa
+                </button>
+            </div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-left-success h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-muted small mb-2">Disponibles</div>
+                                <div class="h3 mb-0 text-success" th:text="${mesasDisponibles}">0</div>
+                            </div>
+                            <div class="text-success">
+                                <i class="fas fa-check-circle fa-3x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-left-danger h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-muted small mb-2">Ocupadas</div>
+                                <div class="h3 mb-0 text-danger" th:text="${mesasOcupadas}">0</div>
+                            </div>
+                            <div class="text-danger">
+                                <i class="fas fa-users fa-3x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-left-warning h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-muted small mb-2">Reservadas</div>
+                                <div class="h3 mb-0 text-warning" th:text="${mesasReservadas}">0</div>
+                            </div>
+                            <div class="text-warning">
+                                <i class="fas fa-clock fa-3x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-left-info h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-muted small mb-2">Total Mesas</div>
+                                <div class="h3 mb-0 text-info" th:text="${totalMesas}">0</div>
+                            </div>
+                            <div class="text-info">
+                                <i class="fas fa-list fa-3x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                <form id="filterForm" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Estado</label>
+                        <select class="form-select" name="estado" id="estadoFilter" onchange="filtrarMesas()">
+                            <option value="">Todos los estados</option>
+                            <option value="DISPONIBLE">Disponible</option>
+                            <option value="OCUPADA">Ocupada</option>
+                            <option value="RESERVADA">Reservada</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Capacidad Mínima</label>
+                        <input type="number" class="form-control" name="capacidadMin"
+                               id="capacidadMinFilter" placeholder="Ej: 2" min="1" oninput="filtrarMesas()">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Buscar</label>
+                        <input type="text" class="form-control" id="searchInput"
+                               placeholder="Buscar por número de mesa..." oninput="filtrarMesas()">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="button" class="btn btn-secondary w-100" onclick="limpiarFiltros()">
+                            <i class="fas fa-eraser me-2"></i>Limpiar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-primary active" id="btnGrid" onclick="cambiarVista('grid')">
+                    <i class="fas fa-th-large me-1"></i>Tarjetas
+                </button>
+                <button type="button" class="btn btn-outline-primary" id="btnTable" onclick="cambiarVista('table')">
+                    <i class="fas fa-table me-1"></i>Tabla
+                </button>
+            </div>
+            <div class="text-muted">
+                <i class="fas fa-chair me-1"></i>
+                <span id="mesasCount">0</span> mesas encontradas
+            </div>
+        </div>
+        <div id="gridView" class="row">
+            <div class="col-md-4 col-lg-3 mb-4 mesa-item" th:each="mesa : ${mesas}">
+                <div class="card mesa-card h-100"
+                     th:classappend="${mesa.estado.name() == 'DISPONIBLE' ? 'border-success' : mesa.estado.name() == 'OCUPADA' ? 'border-danger' : 'border-warning'}">
+                    <div class="card-body text-center">
+                        <div class="mesa-icon mb-3">
+                            <i class="fas fa-chair fa-3x"
+                               th:classappend="${mesa.estado.name() == 'DISPONIBLE' ? 'text-success' : mesa.estado.name() == 'OCUPADA' ? 'text-danger' : 'text-warning'}">
+                            </i>
+                        </div>
+                        <h4 class="card-title mb-2 fw-bold">
+                            Mesa <span th:text="${mesa.numero}">1</span>
+                        </h4>
+                        <span class="badge mb-3"
+                              th:classappend="${mesa.estado.name() == 'DISPONIBLE' ? 'badge-disponible' : mesa.estado.name() == 'OCUPADA' ? 'badge-ocupada' : 'badge-reservada'}"
+                              th:text="${mesa.estado.name()}">
+                            DISPONIBLE
+                        </span>
+                        <div class="mesa-info text-start px-3">
+                            <p class="mb-2">
+                                <i class="fas fa-users text-muted me-2"></i>
+                                <strong>Capacidad:</strong>
+                                <span th:text="${mesa.capacidad} + ' personas'">4 personas</span>
+                            </p>
+                            <p class="mb-0" th:if="${mesa.ubicacion}">
+                                <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                                <strong>Ubicación:</strong>
+                                <span th:text="${mesa.ubicacion}">Planta Baja</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top">
+                        <div class="d-grid gap-2">
+                            <a th:href="@{/mesas/{id}(id=${mesa.idMesa})}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-eye me-1"></i>Ver Detalles
+                            </a>
+                            <div class="btn-group" role="group" sec:authorize="hasAnyRole('ADMIN', 'MOZO')">
+                                <button type="button" class="btn btn-sm btn-success"
+                                        th:if="${mesa.estado.name() != 'OCUPADA'}"
+                                        th:onclick="'asignarMesa(' + ${mesa.idMesa} + ')'">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-warning"
+                                        th:if="${mesa.estado.name() == 'DISPONIBLE'}"
+                                        th:onclick="'reservarMesa(' + ${mesa.idMesa} + ')'">
+                                    <i class="fas fa-bookmark"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-info"
+                                        th:if="${mesa.estado.name() == 'OCUPADA'}"
+                                        th:onclick="'liberarMesa(' + ${mesa.idMesa} + ')'">
+                                    <i class="fas fa-door-open"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="tableView" class="card shadow-sm" style="display: none;">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle" id="mesasTable">
+                        <thead>
+                        <tr>
+                            <th>Número</th>
+                            <th>Capacidad</th>
+                            <th>Ubicación</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="mesa : ${mesas}">
+                            <td>
+                                <strong><i class="fas fa-chair me-2"></i>Mesa <span th:text="${mesa.numero}">1</span></strong>
+                            </td>
+                            <td>
+                                <i class="fas fa-users me-1 text-muted"></i>
+                                <span th:text="${mesa.capacidad}">4</span> personas
+                            </td>
+                            <td th:text="${mesa.ubicacion} ?: '-'">Planta Baja</td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${mesa.estado.name() == 'DISPONIBLE' ? 'badge-disponible' : mesa.estado.name() == 'OCUPADA' ? 'badge-ocupada' : 'badge-reservada'}"
+                                      th:text="${mesa.estado.name()}">
+                                    DISPONIBLE
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a th:href="@{/mesas/{id}(id=${mesa.idMesa})}"
+                                       class="btn btn-primary" title="Ver detalles">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-success"
+                                            th:if="${mesa.estado.name() != 'OCUPADA'}"
+                                            th:onclick="'asignarMesa(' + ${mesa.idMesa} + ')'"
+                                            title="Asignar mesa"
+                                            sec:authorize="hasAnyRole('ADMIN', 'MOZO')">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-warning"
+                                            th:if="${mesa.estado.name() == 'DISPONIBLE'}"
+                                            th:onclick="'reservarMesa(' + ${mesa.idMesa} + ')'"
+                                            title="Reservar mesa"
+                                            sec:authorize="hasAnyRole('ADMIN', 'MOZO')">
+                                        <i class="fas fa-bookmark"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-info"
+                                            th:if="${mesa.estado.name() == 'OCUPADA'}"
+                                            th:onclick="'liberarMesa(' + ${mesa.idMesa} + ')'"
+                                            title="Liberar mesa"
+                                            sec:authorize="hasAnyRole('ADMIN', 'MOZO')">
+                                        <i class="fas fa-door-open"></i>
+                                    </button>
+                                    <a th:href="@{/mesas/{id}/editar(id=${mesa.idMesa})}"
+                                       class="btn btn-secondary" title="Editar"
+                                       sec:authorize="hasRole('ADMIN')">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="alert alert-info text-center fade-in" th:if="${#lists.isEmpty(mesas)}">
+            <i class="fas fa-info-circle fa-3x mb-3 text-info"></i>
+            <h4 class="mb-3">No hay mesas registradas</h4>
+            <p class="mb-4 text-muted">Comienza creando tu primera mesa para el restaurante</p>
+            <a href="/mesas/crear" class="btn btn-primary-custom btn-lg" sec:authorize="hasRole('ADMIN')">
+                <i class="fas fa-plus me-2"></i>Crear Primera Mesa
+            </a>
+        </div>
+    </div>
+</div>
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    function actualizarContador() {
+        const mesasVisibles = document.querySelectorAll('.mesa-item:not([style*="display: none"])').length;
+        document.getElementById('mesasCount').textContent = mesasVisibles;
+    }
+    function cambiarVista(vista) {
+        const gridView = document.getElementById('gridView');
+        const tableView = document.getElementById('tableView');
+        const btnGrid = document.getElementById('btnGrid');
+        const btnTable = document.getElementById('btnTable');
+        if (vista === 'grid') {
+            gridView.style.display = 'flex';
+            tableView.style.display = 'none';
+            btnGrid.classList.add('active');
+            btnTable.classList.remove('active');
+        } else {
+            gridView.style.display = 'none';
+            tableView.style.display = 'block';
+            btnGrid.classList.remove('active');
+            btnTable.classList.add('active');
+            if (!$.fn.DataTable.isDataTable('#mesasTable')) {
+                $('#mesasTable').DataTable({
+                    language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json' },
+                    pageLength: 10,
+                    responsive: true
+                });
+            }
+        }
+    }
+    function filtrarMesas() {
+        const estado = document.getElementById('estadoFilter').value;
+        const capacidadMin = document.getElementById('capacidadMinFilter').value;
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const cards = document.querySelectorAll('.mesa-item');
+        cards.forEach(card => {
+            let mostrar = true;
+            const cardText = card.textContent.toLowerCase();
+            if (search && !cardText.includes(search)) { mostrar = false; }
+            if (estado && !cardText.includes(estado.toLowerCase())) { mostrar = false; }
+            card.style.display = mostrar ? '' : 'none';
+        });
+        actualizarContador();
+    }
+    function limpiarFiltros() {
+        document.getElementById('filterForm').reset();
+        document.getElementById('searchInput').value = '';
+        document.querySelectorAll('.mesa-item').forEach(card => { card.style.display = ''; });
+        actualizarContador();
+    }
+    function asignarMesa(mesaId) {
+        Swal.fire({
+            title: '¿Asignar esta mesa?',
+            text: 'Se creará un nuevo pedido para esta mesa',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#ff6b35',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-check me-2"></i>Sí, asignar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) { window.location.href = `/pedidos/nuevo?mesaId=${mesaId}`; }
+        });
+    }
+    function reservarMesa(mesaId) {
+        Swal.fire({
+            title: 'Reservar Mesa',
+            html: `<div class="text-start">
+                    <div class="mb-3"><label class="form-label">Nombre del cliente</label>
+                    <input id="nombreCliente" class="form-control" placeholder="Ingrese el nombre"></div>
+                    <div class="mb-3"><label class="form-label">Teléfono</label>
+                    <input id="telefonoCliente" class="form-control" placeholder="Ingrese el teléfono"></div>
+                    <div class="mb-3"><label class="form-label">Fecha y hora de reserva</label>
+                    <input id="fechaReserva" type="datetime-local" class="form-control"></div></div>`,
+            confirmButtonText: '<i class="fas fa-bookmark me-2"></i>Reservar',
+            showCancelButton: true,
+            confirmButtonColor: '#ff6b35',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                const nombre = document.getElementById('nombreCliente').value;
+                const telefono = document.getElementById('telefonoCliente').value;
+                const fecha = document.getElementById('fechaReserva').value;
+                if (!nombre || !telefono || !fecha) {
+                    Swal.showValidationMessage('Por favor complete todos los campos');
+                    return false;
+                }
+                return { nombre, telefono, fecha };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/mesas/${mesaId}/reservar`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(result.value)
+                }).then(response => {
+                    if (response.ok) {
+                        Swal.fire({ icon: 'success', title: '¡Reservada!', text: 'La mesa ha sido reservada exitosamente', confirmButtonColor: '#ff6b35' }).then(() => location.reload());
+                    } else { throw new Error('Error al reservar'); }
+                }).catch(() => { Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo realizar la reserva', confirmButtonColor: '#ff6b35' }); });
+            }
+        });
+    }
+    function liberarMesa(mesaId) {
+        Swal.fire({
+            title: '¿Liberar esta mesa?',
+            text: 'La mesa quedará disponible nuevamente',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ff6b35',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-door-open me-2"></i>Sí, liberar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/mesas/${mesaId}/liberar`, { method: 'PUT' }).then(response => {
+                    if (response.ok) {
+                        Swal.fire({ icon: 'success', title: '¡Liberada!', text: 'La mesa está disponible', confirmButtonColor: '#ff6b35' }).then(() => location.reload());
+                    } else { throw new Error('Error al liberar'); }
+                }).catch(() => { Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo liberar la mesa', confirmButtonColor: '#ff6b35' }); });
+            }
+        });
+    }
+    document.addEventListener('DOMContentLoaded', function() { actualizarContador(); });
+</script>
 </body>
 </html>

@@ -17,13 +17,10 @@ public interface MesaRepository extends JpaRepository<Mesa, Long> {
     // Buscar mesa por número
     Optional<Mesa> findByNumero(Integer numero);
 
-    // Buscar mesas por estado
+    // Buscar mesas por estado (DISPONIBLE, OCUPADA, RESERVADA)
     List<Mesa> findByEstado(EstadoMesa estado);
 
-    // Buscar mesas disponibles
-    List<Mesa> findByEstado(EstadoMesa estado);
-
-    // Buscar mesas disponibles con capacidad mínima
+    // Buscar mesas con capacidad mínima y estado específico
     List<Mesa> findByEstadoAndCapacidadGreaterThanEqual(EstadoMesa estado, Integer capacidad);
 
     // Buscar mesas por ubicación
@@ -31,4 +28,7 @@ public interface MesaRepository extends JpaRepository<Mesa, Long> {
 
     // Contar mesas por estado
     long countByEstado(EstadoMesa estado);
+
+    // Verificar si existe una mesa con ese número
+    boolean existsByNumero(Integer numero);
 }

@@ -1,10 +1,722 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
+<div th:fragment="sidebar">
 
+    <style>
+        /* ================================
+           SIDEBAR STYLES - DISEÑO COMPLETO
+           ================================ */
+
+        :root {
+            --sidebar-width: 280px;
+            --primary-color: #FF6B35;
+            --secondary-color: #1a2332;
+            --accent-color: #4ECDC4;
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --hover-bg: rgba(255, 255, 255, 0.1);
+            --shadow-color: rgba(0, 0, 0, 0.3);
+        }
+
+        /* SIDEBAR CONTAINER */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(180deg, #1a2332 0%, #0d1117 100%);
+            color: var(--text-primary);
+            overflow-y: auto;
+            overflow-x: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1040;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 30px var(--shadow-color);
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* HEADER */
+        .sidebar-header {
+            padding: 1.75rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 100%);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-section i {
+            font-size: 2rem;
+            color: var(--primary-color);
+            animation: pulse 2.5s ease-in-out infinite;
+            filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.5));
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.08); opacity: 0.9; }
+        }
+
+        .logo-section h4 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin: 0 !important;
+            background: linear-gradient(135deg, #FF6B35 0%, #F7931E 50%, #FFB74D 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 0.5px;
+        }
+
+        .close-btn {
+            color: var(--text-primary) !important;
+            font-size: 1.5rem;
+            padding: 0 !important;
+            border: none !important;
+            background: none !important;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none !important;
+        }
+
+        .close-btn:hover {
+            color: var(--primary-color) !important;
+            transform: rotate(90deg);
+        }
+
+        /* CONTENT */
+        .sidebar-content {
+            flex: 1;
+            padding: 1.25rem 0;
+        }
+
+        /* SIDEBAR ITEMS */
+        .sidebar-item {
+            display: flex !important;
+            align-items: center;
+            gap: 14px;
+            padding: 1rem 1.5rem;
+            color: var(--text-secondary) !important;
+            text-decoration: none !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: 0.3rem 1rem;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: linear-gradient(180deg, var(--primary-color) 0%, #F7931E 100%);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .sidebar-item::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255, 107, 53, 0.1) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .sidebar-item:hover {
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%) !important;
+            color: var(--text-primary) !important;
+            transform: translateX(6px);
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.15);
+            text-decoration: none !important;
+        }
+
+        .sidebar-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        .sidebar-item:hover::after {
+            opacity: 1;
+        }
+
+        .sidebar-item.active {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.25) 0%, rgba(247, 147, 30, 0.15) 100%) !important;
+            color: var(--text-primary) !important;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(255, 107, 53, 0.25);
+        }
+
+        .sidebar-item.active::before {
+            transform: scaleY(1);
+        }
+
+        .sidebar-item.active .item-icon {
+            color: var(--primary-color);
+            transform: scale(1.1);
+        }
+
+        .item-icon {
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .item-text {
+            font-size: 0.95rem;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        /* SECTIONS */
+        .sidebar-section {
+            margin: 1.5rem 0;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.875rem 1.5rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 1.5px;
+            margin-top: 1.25rem;
+            position: relative;
+        }
+
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: -0.5rem;
+            left: 1.5rem;
+            right: 1.5rem;
+            height: 1px;
+            background: linear-gradient(90deg, var(--accent-color) 0%, transparent 100%);
+        }
+
+        .section-header i {
+            font-size: 1.1rem;
+            color: var(--accent-color);
+            filter: drop-shadow(0 0 8px rgba(78, 205, 196, 0.4));
+        }
+
+        .section-items {
+            margin-left: 0;
+            margin-top: 0.5rem;
+        }
+
+        .sub-item {
+            padding-left: 2.5rem;
+            font-size: 0.9rem;
+            margin: 0.2rem 1rem;
+        }
+
+        /* FOOTER */
+        .sidebar-footer {
+            padding: 1.25rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%);
+            backdrop-filter: blur(10px);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 1rem;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .user-profile:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-avatar i {
+            font-size: 1.6rem;
+            color: white;
+        }
+
+        .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 0.2rem;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .logout-btn {
+            color: var(--text-secondary) !important;
+            font-size: 1.3rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none !important;
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+
+        .logout-btn:hover {
+            color: var(--primary-color) !important;
+            background: rgba(255, 107, 53, 0.1);
+            transform: translateX(3px);
+        }
+
+        /* OVERLAY */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: none;
+            z-index: 1039;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* TOGGLE BUTTON */
+        .sidebar-toggle {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #F7931E 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.5);
+            z-index: 1041;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar-toggle:hover {
+            transform: scale(1.15) rotate(90deg);
+            box-shadow: 0 15px 40px rgba(255, 107, 53, 0.6);
+        }
+
+        .sidebar-toggle:active {
+            transform: scale(0.95);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 991.98px) {
+            .sidebar {
+                left: calc(-1 * var(--sidebar-width));
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .sidebar-toggle {
+                display: flex !important;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .main-content {
+                margin-left: var(--sidebar-width);
+                transition: margin-left 0.3s ease;
+            }
+
+            .close-btn {
+                display: none !important;
+            }
+        }
+
+        /* ANIMATIONS */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-25px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar-item,
+        .section-header {
+            animation: slideIn 0.4s ease-out backwards;
+        }
+
+        .sidebar-item:nth-child(1) { animation-delay: 0.05s; }
+        .sidebar-item:nth-child(2) { animation-delay: 0.08s; }
+        .sidebar-item:nth-child(3) { animation-delay: 0.11s; }
+        .sidebar-item:nth-child(4) { animation-delay: 0.14s; }
+        .sidebar-item:nth-child(5) { animation-delay: 0.17s; }
+        .sidebar-item:nth-child(6) { animation-delay: 0.20s; }
+        .sidebar-item:nth-child(7) { animation-delay: 0.23s; }
+        .sidebar-item:nth-child(8) { animation-delay: 0.26s; }
+    </style>
+
+    <!-- HTML DEL SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <!-- HEADER -->
+        <div class="sidebar-header">
+            <div class="logo-section">
+                <i class="fas fa-utensils"></i>
+                <h4>Restaurant</h4>
+            </div>
+            <button class="btn btn-link close-btn d-lg-none" id="closeSidebar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="sidebar-content">
+
+            <!-- Dashboard -->
+            <a href="/dashboard" class="sidebar-item">
+                <div class="item-icon">
+                    <i class="fas fa-home"></i>
+                </div>
+                <span class="item-text">Dashboard</span>
+            </a>
+
+            <!-- PEDIDOS -->
+            <div class="sidebar-section">
+                <div class="section-header">
+                    <i class="fas fa-receipt"></i>
+                    <span>Pedidos</span>
+                </div>
+                <div class="section-items">
+                    <a href="/pedidos" class="sidebar-item sub-item">
+                        <div class="item-icon">
+                            <i class="fas fa-list"></i>
+                        </div>
+                        <span class="item-text">Lista de Pedidos</span>
+                    </a>
+                    <a href="/pedidos/nuevo" class="sidebar-item sub-item" sec:authorize="hasAnyRole('ADMIN', 'MOZO')">
+                        <div class="item-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <span class="item-text">Crear Pedido</span>
+                    </a>
+                    <a href="/pedidos/cocina" class="sidebar-item sub-item" sec:authorize="hasRole('COCINERO')">
+                        <div class="item-icon">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <span class="item-text">Vista Cocina</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- MESAS -->
+            <div class="sidebar-section" sec:authorize="hasAnyRole('ADMIN', 'MOZO')">
+                <div class="section-header">
+                    <i class="fas fa-chair"></i>
+                    <span>Mesas</span>
+                </div>
+                <div class="section-items">
+                    <a href="/mesas" class="sidebar-item sub-item">
+                        <div class="item-icon">
+                            <i class="fas fa-list"></i>
+                        </div>
+                        <span class="item-text">Lista de Mesas</span>
+                    </a>
+                    <a href="/mesas/crear" class="sidebar-item sub-item" sec:authorize="hasRole('ADMIN')">
+                        <div class="item-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <span class="item-text">Crear Mesa</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- PLATOS -->
+            <div class="sidebar-section" sec:authorize="hasAnyRole('ADMIN', 'COCINERO')">
+                <div class="section-header">
+                    <i class="fas fa-pizza-slice"></i>
+                    <span>Platos</span>
+                </div>
+                <div class="section-items">
+                    <a href="/platos" class="sidebar-item sub-item">
+                        <div class="item-icon">
+                            <i class="fas fa-list"></i>
+                        </div>
+                        <span class="item-text">Lista de Platos</span>
+                    </a>
+                    <a href="/platos/crear" class="sidebar-item sub-item" sec:authorize="hasRole('ADMIN')">
+                        <div class="item-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <span class="item-text">Crear Plato</span>
+                    </a>
+                    <a href="/insumos" class="sidebar-item sub-item" sec:authorize="hasRole('ADMIN')">
+                        <div class="item-icon">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <span class="item-text">Gestionar Insumos</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- CLIENTES -->
+            <div class="sidebar-section" sec:authorize="hasAnyRole('ADMIN', 'MOZO', 'CAJERO')">
+                <div class="section-header">
+                    <i class="fas fa-users"></i>
+                    <span>Clientes</span>
+                </div>
+                <div class="section-items">
+                    <a href="/clientes" class="sidebar-item sub-item">
+                        <div class="item-icon">
+                            <i class="fas fa-list"></i>
+                        </div>
+                        <span class="item-text">Lista de Clientes</span>
+                    </a>
+                    <a href="/clientes/crear" class="sidebar-item sub-item">
+                        <div class="item-icon">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <span class="item-text">Registrar Cliente</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- FACTURAS -->
+            <div class="sidebar-section" sec:authorize="hasAnyRole('ADMIN', 'CAJERO')">
+                <div class="section-header">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Facturas</span>
+                </div>
+                <div class="section-items">
+                    <a href="/facturas" class="sidebar-item sub-item">
+                        <div class="item-icon">
+                            <i class="fas fa-list"></i>
+                        </div>
+                        <span class="item-text">Lista de Facturas</span>
+                    </a>
+                    <a href="/facturas/buscar" class="sidebar-item sub-item">
+                        <div class="item-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <span class="item-text">Buscar Factura</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- REPORTES -->
+            <div class="sidebar-section" sec:authorize="hasAnyRole('ADMIN', 'CAJERO')">
+                <div class="section-header">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reportes</span>
+                </div>
+                <div class="section-items">
+                    <a href="/reportes/ventas" class="sidebar-item sub-item">
+                        <div class="item-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <span class="item-text">Reporte de Ventas</span>
+                    </a>
+                    <a href="/reportes/productos" class="sidebar-item sub-item">
+                        <div class="item-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <span class="item-text">Productos Vendidos</span>
+                    </a>
+                    <a href="/reportes/bitacora" class="sidebar-item sub-item">
+                        <div class="item-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <span class="item-text">Bitácora</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- ADMINISTRACIÓN -->
+            <div class="sidebar-section" sec:authorize="hasRole('ADMIN')">
+                <div class="section-header">
+                    <i class="fas fa-cog"></i>
+                    <span>Administración</span>
+                </div>
+                <div class="section-items">
+                    <a href="/usuarios" class="sidebar-item sub-item">
+                        <div class="item-icon">
+                            <i class="fas fa-user-cog"></i>
+                        </div>
+                        <span class="item-text">Gestionar Usuarios</span>
+                    </a>
+                    <a href="/configuracion" class="sidebar-item sub-item">
+                        <div class="item-icon">
+                            <i class="fas fa-sliders-h"></i>
+                        </div>
+                        <span class="item-text">Configuración</span>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-info">
+                    <div class="user-name" sec:authentication="name">Usuario</div>
+                    <div class="user-role" sec:authentication="principal.authorities">Rol</div>
+                </div>
+                <a href="#" onclick="document.getElementById('logoutForm').submit(); return false;" class="logout-btn" title="Cerrar Sesión">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form id="logoutForm" th:action="@{/logout}" method="post" style="display: none;">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+    </form>
+
+    <!-- OVERLAY -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- TOGGLE BUTTON -->
+    <button class="sidebar-toggle d-lg-none" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const closeSidebar = document.getElementById('closeSidebar');
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('active');
+                    sidebarOverlay.classList.toggle('active');
+                });
+            }
+
+            if (closeSidebar) {
+                closeSidebar.addEventListener('click', function() {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                });
+            }
+
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', function() {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                });
+            }
+
+            // Marcar item activo
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                const href = item.getAttribute('href');
+                if (currentPath === href || (href !== '/' && href !== '/dashboard' && currentPath.startsWith(href))) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Cerrar en móvil al navegar
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    if (window.innerWidth < 992) {
+                        sidebar.classList.remove('active');
+                        sidebarOverlay.classList.remove('active');
+                    }
+                });
+            });
+        });
+    </script>
+
+</div>
 </body>
 </html>

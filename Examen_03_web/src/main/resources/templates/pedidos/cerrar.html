@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cerrar Pedido - Restaurant</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-color: #FF6B35;
+            --secondary-color: #1a2332;
+            --accent-color: #4ECDC4;
+            --success-color: #2ECC71;
+        }
+
+        body {
+            background: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        @media (max-width: 991.98px) {
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+        }
+
+        .page-header {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            color: var(--secondary-color);
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .step-indicator {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .step {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #999;
+        }
+
+        .step.active {
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        .step.completed {
+            color: var(--success-color);
+        }
+
+        .step-number {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .step.active .step-number {
+            background: linear-gradient(135deg, var(--primary-color), #F7931E);
+        }
+
+        .step.completed .step-number {
+            background: var(--success-color);
+        }
+
+        /* Resumen del Pedido */
+        .resumen-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .card-title i {
+            color: var(--accent-color);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-item {
+            padding: 1rem;
+            background: #f8f9fc;
+            border-radius: 10px;
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+
+        /* Platos Table */
+        .platos-table {
+            margin-bottom: 1.5rem;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table thead {
+            background: #f8f9fc;
+        }
+
+        .table th {
+            font-weight: 700;
+            color: var(--secondary-color);
+            border: none;
+            padding: 1rem;
+        }
+
+        .table td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        /* Total Box */
+        .total-box {
+            background: linear-gradient(135deg, var(--secondary-color), #2a3749);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .total-final {
+            border-top: 2px solid rgba(255, 255, 255, 0.2);
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+
+        .total-final .total-amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        /* Payment Methods */
+        .payment-methods {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .payment-option {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .payment-option:hover {
+            border-color: var(--primary-color);
+            background: rgba(255, 107, 53, 0.05);
+            transform: translateX(5px);
+        }
+
+        .payment-option input[type="radio"] {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            accent-color: var(--primary-color);
+        }
+
+        .payment-icon {
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            width: 60px;
+            text-align: center;
+        }
+
+        .payment-info {
+            flex: 1;
+        }
+
+        .payment-name {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--secondary-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .payment-description {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Buttons */
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--success-color), #27AE60);
+            border: none;
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(46, 204, 113, 0.4);
+        }
+
+        .btn-secondary-custom {
+            background: #6c757d;
+            border: none;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary-custom:hover {
+            background: #5a6268;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        @media (max-width: 576px) {
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Sidebar -->
+<div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+<!-- Main Content -->
+<div class="main-content">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1>
+            <i class="fas fa-cash-register"></i>
+            Cerrar Pedido y Facturar
+        </h1>
+    </div>
+
+    <!-- Step Indicator -->
+    <div class="step-indicator">
+        <div class="step completed">
+            <div class="step-number"><i class="fas fa-check"></i></div>
+            <span>Mesa</span>
+        </div>
+        <span class="mx-3">→</span>
+        <div class="step completed">
+            <div class="step-number"><i class="fas fa-check"></i></div>
+            <span>Platos</span>
+        </div>
+        <span class="mx-3">→</span>
+        <div class="step active">
+            <div class="step-number">3</div>
+            <span>Finalizar</span>
+        </div>
+    </div>
+
+    <!-- Alerts -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Resumen del Pedido -->
+            <div class="resumen-card">
+                <div class="card-title">
+                    <i class="fas fa-receipt"></i>
+                    Resumen del Pedido
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Pedido N°</div>
+                        <div class="info-value" th:text="${pedido.idPedido}"></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Mesa</div>
+                        <div class="info-value" th:text="${pedido.mesa.numero}"></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Hora</div>
+                        <div class="info-value" th:text="${#temporals.format(pedido.fechaPedido, 'HH:mm')}"></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Atendido por</div>
+                        <div class="info-value" th:text="${pedido.usuario.username}"></div>
+                    </div>
+                </div>
+
+                <div class="platos-table">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Plato</th>
+                            <th class="text-center">Cantidad</th>
+                            <th class="text-end">Precio</th>
+                            <th class="text-end">Subtotal</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="detalle : ${pedido.detalles}">
+                            <td>
+                                <strong th:text="${detalle.plato.nombre}"></strong>
+                                <br>
+                                <small class="text-muted" th:if="${detalle.observaciones}" th:text="${detalle.observaciones}"></small>
+                            </td>
+                            <td class="text-center" th:text="${detalle.cantidad}"></td>
+                            <td class="text-end">S/ <span th:text="${#numbers.formatDecimal(detalle.precioUnitario, 1, 2)}"></span></td>
+                            <td class="text-end"><strong>S/ <span th:text="${#numbers.formatDecimal(detalle.subtotal, 1, 2)}"></span></strong></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="total-box">
+                    <div class="total-row">
+                        <span>Subtotal:</span>
+                        <span>S/ <span th:text="${#numbers.formatDecimal(pedido.total / 1.18, 1, 2)}"></span></span>
+                    </div>
+                    <div class="total-row">
+                        <span>IGV (18%):</span>
+                        <span>S/ <span th:text="${#numbers.formatDecimal(pedido.total - (pedido.total / 1.18), 1, 2)}"></span></span>
+                    </div>
+                    <div class="total-row total-final">
+                        <span style="font-size: 1.5rem;">TOTAL:</span>
+                        <span class="total-amount">S/ <span th:text="${#numbers.formatDecimal(pedido.total, 1, 2)}"></span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Método de Pago -->
+            <div class="payment-methods">
+                <div class="card-title">
+                    <i class="fas fa-credit-card"></i>
+                    Método de Pago
+                </div>
+
+                <form th:action="@{/pedidos/{id}/cerrar(id=${pedido.idPedido})}" method="post">
+                    <div th:each="metodo : ${metodosPago}" class="payment-option">
+                        <input type="radio"
+                               name="metodoPago"
+                               th:value="${metodo}"
+                               th:id="'metodo-' + ${metodo}"
+                               required>
+                        <label th:for="'metodo-' + ${metodo}" style="cursor: pointer; margin: 0; flex: 1; display: flex; align-items: center; gap: 15px;">
+                            <div class="payment-icon">
+                                <i th:class="${metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).EFECTIVO ? 'fas fa-money-bill-wave' :
+                                                   metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).TARJETA ? 'fas fa-credit-card' :
+                                                   metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).YAPE ? 'fas fa-mobile-alt' :
+                                                   'fas fa-wallet'}"></i>
+                            </div>
+                            <div class="payment-info">
+                                <div class="payment-name" th:text="${metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).EFECTIVO ? 'Efectivo' :
+                                                                               metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).TARJETA ? 'Tarjeta' :
+                                                                               metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).YAPE ? 'Yape' :
+                                                                               metodo}"></div>
+                                <div class="payment-description" th:text="${metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).EFECTIVO ? 'Pago en efectivo' :
+                                                                                       metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).TARJETA ? 'Débito o crédito' :
+                                                                                       metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).YAPE ? 'Pago móvil' :
+                                                                                       'Otro método'}"></div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="button-group mt-4">
+                        <a th:href="@{/pedidos/{id}/agregar-platos(id=${pedido.idPedido})}" class="btn-secondary-custom">
+                            <i class="fas fa-arrow-left me-2"></i>Volver
+                        </a>
+                        <button type="submit" class="btn-primary-custom">
+                            <i class="fas fa-check-circle me-2"></i>Cerrar y Facturar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Highlight selected payment method
+    document.querySelectorAll('input[name="metodoPago"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            document.querySelectorAll('.payment-option').forEach(opt => {
+                opt.style.borderColor = '#e0e0e0';
+                opt.style.background = 'white';
+            });
+
+            if (this.checked) {
+                this.closest('.payment-option').style.borderColor = 'var(--primary-color)';
+                this.closest('.payment-option').style.background = 'rgba(255, 107, 53, 0.05)';
+            }
+        });
+    });
+</script>
+</body>
+</html>

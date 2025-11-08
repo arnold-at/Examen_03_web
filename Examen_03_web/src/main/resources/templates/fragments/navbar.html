@@ -1,10 +1,169 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
-
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow-sm">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand d-flex align-items-center" href="/dashboard">
+            <i class="fas fa-utensils me-2" style="color: var(--primary-color); font-size: 1.8rem;"></i>
+            <span class="fw-bold fs-4">Sabor Gourmet</span>
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav ms-auto me-3">
+                <li class="nav-item">
+                    <a class="nav-link px-3" href="/dashboard">
+                        <i class="fas fa-home me-1"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link px-3" href="/pedidos">
+                        <i class="fas fa-receipt me-1"></i> Pedidos
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'MOZO')">
+                    <a class="nav-link px-3" href="/mesas">
+                        <i class="fas fa-chair me-1"></i> Mesas
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'COCINERO')">
+                    <a class="nav-link px-3" href="/platos">
+                        <i class="fas fa-pizza-slice me-1"></i> Platos
+                    </a>
+                </li>
+                <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'CAJERO')">
+                    <a class="nav-link dropdown-toggle px-3" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-chart-bar me-1"></i> Reportes
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/reportes/ventas">
+                            <i class="fas fa-dollar-sign me-2 text-success"></i> Ventas
+                        </a></li>
+                        <li><a class="dropdown-item" href="/reportes/productos">
+                            <i class="fas fa-box me-2 text-info"></i> Productos
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/reportes/bitacora">
+                            <i class="fas fa-history me-2 text-secondary"></i> Bitácora
+                        </a></li>
+                    </ul>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link px-3" href="/configuracion">
+                        <i class="fas fa-cog me-1"></i> Config
+                    </a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link position-relative px-3" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-bell fs-5"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                              id="notificationBadge" style="display: none; font-size: 0.65rem;">0</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" style="width: 320px;">
+                        <li class="dropdown-header fw-bold">
+                            <i class="fas fa-bell me-2"></i>Notificaciones
+                        </li>
+                        <li><hr class="dropdown-divider my-0"></li>
+                        <li class="px-3 py-3 text-muted text-center" id="notificationList">
+                            <i class="fas fa-inbox fa-2x mb-2 opacity-50"></i>
+                            <p class="mb-0 small">No hay notificaciones nuevas</p>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center px-3" href="#" role="button" data-bs-toggle="dropdown">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center me-2"
+                             style="width: 38px; height: 38px; background: linear-gradient(135deg, var(--primary-color) 0%, #e85a28 100%);">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                        <div class="d-none d-lg-block text-start">
+                            <small class="d-block mb-0" sec:authentication="name">Usuario</small>
+                            <small class="text-muted" style="font-size: 0.7rem;" sec:authentication="principal.authorities">Rol</small>
+                        </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li class="dropdown-header text-center pb-3">
+                            <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2"
+                                 style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary-color) 0%, #e85a28 100%);">
+                                <i class="fas fa-user text-white fs-4"></i>
+                            </div>
+                            <div class="fw-bold" sec:authentication="name">Usuario</div>
+                            <small class="text-muted" sec:authentication="principal.authorities">Rol</small>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item py-2" href="/perfil">
+                            <i class="fas fa-user-circle me-2 text-primary"></i> Mi Perfil
+                        </a></li>
+                        <li><a class="dropdown-item py-2" href="/configuracion/cuenta">
+                            <i class="fas fa-cog me-2 text-secondary"></i> Configuración
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form th:action="@{/logout}" method="post" class="px-2">
+                                <button type="submit" class="dropdown-item text-danger py-2">
+                                    <i class="fas fa-sign-out-alt me-2"></i> Cerrar Sesión
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<style>
+    .navbar {
+        height: var(--navbar-height);
+        padding: 0.5rem 0;
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    }
+    .navbar-brand { font-size: 1.4rem; transition: transform 0.3s ease; }
+    .navbar-brand:hover { transform: scale(1.05); }
+    .nav-link {
+        padding: 0.5rem 1rem !important;
+        transition: all 0.3s ease;
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    .nav-link:hover {
+        background-color: rgba(255, 107, 53, 0.15);
+        color: var(--primary-color) !important;
+    }
+    .nav-link.active {
+        background-color: rgba(255, 107, 53, 0.2);
+        color: var(--primary-color) !important;
+    }
+    .dropdown-menu {
+        border: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border-radius: 12px;
+        margin-top: 0.5rem;
+    }
+    .dropdown-item {
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+        border-radius: 8px;
+        margin: 0.2rem 0.5rem;
+    }
+    .dropdown-item:hover {
+        background-color: rgba(255, 107, 53, 0.1);
+        color: var(--primary-color);
+        transform: translateX(5px);
+    }
+    .dropdown-header { padding: 1rem 1.5rem 0.5rem; }
+    @media (max-width: 991.98px) {
+        .navbar-collapse {
+            background-color: #2c3e50;
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 12px;
+        }
+    }
+</style>
 </body>
 </html>

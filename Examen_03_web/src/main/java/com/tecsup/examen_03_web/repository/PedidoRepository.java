@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -43,12 +44,12 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     // Buscar pedidos por rango de fechas
     List<Pedido> findByFechaHoraBetween(LocalDateTime fechaInicio, LocalDateTime fechaFin);
 
-    // Buscar pedidos del día actual
-    @Query("SELECT p FROM Pedido p WHERE DATE(p.fechaHora) = CURRENT_DATE ORDER BY p.fechaHora DESC")
+    // ✅ CORREGIDO - Buscar pedidos del día actual
+    @Query("SELECT p FROM Pedido p WHERE CAST(p.fechaHora AS LocalDate) = CURRENT_DATE ORDER BY p.fechaHora DESC")
     List<Pedido> findPedidosDelDia();
 
-    // Buscar pedidos cerrados del día (para reportes de ventas)
-    @Query("SELECT p FROM Pedido p WHERE DATE(p.fechaHora) = CURRENT_DATE AND p.estado = 'CERRADO'")
+    // ✅ CORREGIDO - Buscar pedidos cerrados del día (para reportes de ventas)
+    @Query("SELECT p FROM Pedido p WHERE CAST(p.fechaHora AS LocalDate) = CURRENT_DATE AND p.estado = 'CERRADO'")
     List<Pedido> findPedidosCerradosDelDia();
 
     // Contar pedidos por estado
@@ -56,4 +57,26 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
     // Buscar últimos pedidos (dashboard)
     List<Pedido> findTop10ByOrderByFechaHoraDesc();
+
+    // ========== MÉTODOS ADICIONALES ÚTILES ==========
+
+    // Buscar pedidos del día por estado
+    @Query("SELECT p FROM Pedido p WHERE CAST(p.fechaHora AS LocalDate) = CURRENT_DATE AND p.estado = :estado ORDER BY p.fechaHora DESC")
+    List<Pedido> findPedidosDelDiaPorEstado(@Param("estado") EstadoPedido estado);
+
+    // Buscar pedidos de una fecha específica
+    @Query("SELECT p FROM Pedido p WHERE CAST(p.fechaHora AS LocalDate) = :fecha ORDER BY p.fechaHora DESC")
+    List<Pedido> findPedidosPorFecha(@Param("fecha") LocalDate fecha);
+
+    // Contar pedidos del día
+    @Query("SELECT COUNT(p) FROM Pedido p WHERE CAST(p.fechaHora AS LocalDate) = CURRENT_DATE")
+    long countPedidosDelDia();
+
+    // Contar pedidos cerrados del día
+    @Query("SELECT COUNT(p) FROM Pedido p WHERE CAST(p.fechaHora AS LocalDate) = CURRENT_DATE AND p.estado = 'CERRADO'")
+    long countPedidosCerradosDelDia();
+
+    // Buscar pedidos por mesa y estado
+    @Query("SELECT p FROM Pedido p WHERE p.mesa.idMesa = :idMesa AND p.estado = :estado ORDER BY p.fechaHora DESC")
+    List<Pedido> findByMesaAndEstado(@Param("idMesa") Long idMesa, @Param("estado") EstadoPedido estado);
 }

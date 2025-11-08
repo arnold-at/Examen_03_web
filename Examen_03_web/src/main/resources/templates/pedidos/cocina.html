@@ -1,10 +1,100 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: header}"></head>
 <body>
-
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<div class="d-flex">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-content flex-grow-1 p-4">
+        <div class="alert alert-info d-flex align-items-center mb-4">
+            <i class="fas fa-sync-alt fa-spin me-3 fs-4"></i>
+            <div>
+                <strong>Actualización Automática</strong>
+                <p class="mb-0 small">Esta página se actualiza automáticamente cada 30 segundos</p>
+            </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">
+                    <i class="fas fa-fire me-2 text-danger"></i>Vista de Cocina
+                </h2>
+                <p class="text-muted mb-0">
+                    Pedidos pendientes y en preparación
+                    <span class="badge bg-primary ms-2" th:text="${#lists.size(pedidos)}">0</span>
+                </p>
+            </div>
+            <div>
+                <button class="btn btn-secondary" onclick="location.reload()">
+                    <i class="fas fa-sync-alt me-2"></i>Actualizar Ahora
+                </button>
+            </div>
+        </div>
+        <div class="alert alert-success text-center py-5 fade-in" th:if="${#lists.isEmpty(pedidos)}">
+            <i class="fas fa-check-circle fa-4x mb-3"></i>
+            <h3 class="mb-2">¡Todo Listo!</h3>
+            <p class="mb-0">No hay pedidos pendientes en este momento</p>
+        </div>
+        <div class="row">
+            <div class="col-xl-4 col-lg-6 mb-4" th:each="pedido : ${pedidos}">
+                <div class="card h-100 border-0 shadow-sm fade-in">
+                    <div class="card-header text-white"
+                         th:classappend="${pedido.estado.name() == 'PENDIENTE'} ? 'bg-warning text-dark' : 'bg-info'">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-1">
+                                    <i class="fas fa-receipt me-2"></i>
+                                    Pedido #<span th:text="${pedido.idPedido}">001</span>
+                                </h4>
+                                <p class="mb-0">
+                                    <i class="fas fa-chair me-1"></i>
+                                    Mesa <strong th:text="${pedido.mesa.numero}">1</strong>
+                                </p>
+                            </div>
+                            <div class="text-end">
+                                <div class="fs-1">🔔</div>
+                                <small th:text="${#temporals.format(pedido.fechaHora, 'HH:mm')}">12:00</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item px-0" th:each="detalle : ${pedido.detalles}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1" th:text="${detalle.plato.nombre}">Plato</h6>
+                                        <small class="text-danger" th:if="${detalle.observaciones}">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            <span th:text="${detalle.observaciones}">Obs</span>
+                                        </small>
+                                    </div>
+                                    <span class="badge bg-primary fs-6" th:text="${detalle.cantidad} + 'x'">1x</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge fs-6"
+                                  th:classappend="${pedido.estado.name() == 'PENDIENTE'} ? 'badge-pendiente' : 'badge-preparacion'"
+                                  th:text="${pedido.estado.name()}">ESTADO</span>
+                            <form th:action="@{/pedidos/{id}/cambiar-estado(id=${pedido.idPedido})}" method="post" class="mb-0">
+                                <input type="hidden" name="estado"
+                                       th:value="${pedido.estado.name() == 'PENDIENTE' ? 'EN_PREPARACION' : 'SERVIDO'}">
+                                <button type="submit" class="btn btn-sm"
+                                        th:classappend="${pedido.estado.name() == 'PENDIENTE'} ? 'btn-primary' : 'btn-success'">
+                                    <i th:class="${pedido.estado.name() == 'PENDIENTE'} ? 'fas fa-play' : 'fas fa-check'" class="me-1"></i>
+                                    <span th:text="${pedido.estado.name() == 'PENDIENTE'} ? 'Iniciar' : 'Marcar Listo'">Acción</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:replace="~{fragments/footer :: footer}"></div>
+<meta http-equiv="refresh" content="30">
 </body>
 </html>

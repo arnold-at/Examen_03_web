@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head">
+    <th:block th:replace="~{fragments/header :: header}"></th:block>
+</head>
+<body>
+<!-- Layout Base Fragment -->
+<div th:fragment="layout">
+    <!-- Navbar -->
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <!-- Main Wrapper -->
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+        <!-- Main Content Area -->
+        <main class="main-content flex-grow-1">
+            <!-- El contenido específico de cada página irá aquí -->
+            <div th:replace="${content}"></div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</div>
+</body>
+</html>
