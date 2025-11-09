@@ -1,10 +1,12 @@
 package com.tecsup.examen_03_web.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.tecsup.examen_03_web.model.enums.EstadoPedido;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -14,10 +16,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Entidad que representa un pedido del restaurante
- * ⭐ MÓDULO PRINCIPAL CON LÓGICA COMPLETA ⭐
- */
 @Entity
 @Table(name = "pedidos")
 @Data
@@ -32,7 +30,7 @@ public class Pedido {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_cliente")
-    private Cliente cliente; // Opcional
+    private Cliente cliente;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_mesa", nullable = false)
@@ -40,7 +38,7 @@ public class Pedido {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_usuario_registro", nullable = false)
-    private Usuario usuarioRegistro; // Mozo o cajero que registró el pedido
+    private Usuario usuarioRegistro;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
@@ -56,20 +54,20 @@ public class Pedido {
     @Column(length = 500)
     private String observaciones;
 
-    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    @ToString.Exclude
     private List<DetallePedido> detalles = new ArrayList<>();
 
     @LastModifiedDate
     private LocalDateTime fechaActualizacion;
 
-    // Método helper para agregar detalles
     public void agregarDetalle(DetallePedido detalle) {
         detalles.add(detalle);
         detalle.setPedido(this);
         calcularTotal();
     }
 
-    // Método para calcular el total del pedido
     public void calcularTotal() {
         this.total = detalles.stream()
                 .map(DetallePedido::getSubtotal)

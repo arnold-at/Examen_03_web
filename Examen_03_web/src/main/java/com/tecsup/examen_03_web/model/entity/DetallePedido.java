@@ -1,5 +1,6 @@
 package com.tecsup.examen_03_web.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,10 +8,6 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-/**
- * Entidad que representa el detalle de un pedido
- * ⭐ MÓDULO PRINCIPAL CON LÓGICA COMPLETA ⭐
- */
 @Entity
 @Table(name = "detalle_pedido")
 @Data
@@ -24,6 +21,7 @@ public class DetallePedido {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_pedido", nullable = false)
+    @JsonIgnore
     private Pedido pedido;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -40,9 +38,8 @@ public class DetallePedido {
     private BigDecimal subtotal;
 
     @Column(length = 300)
-    private String observaciones; // Ej: "sin cebolla", "término 3/4"
+    private String observaciones;
 
-    // Método para calcular el subtotal
     public void calcularSubtotal() {
         this.subtotal = this.precioUnitario.multiply(BigDecimal.valueOf(this.cantidad));
     }

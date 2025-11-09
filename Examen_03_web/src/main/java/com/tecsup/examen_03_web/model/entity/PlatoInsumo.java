@@ -1,5 +1,6 @@
 package com.tecsup.examen_03_web.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,10 +8,6 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-/**
- * Entidad que representa la relación entre Plato e Insumo
- * Define qué insumos se usan en cada plato y en qué cantidad
- */
 @Entity
 @Table(name = "plato_insumo")
 @Data
@@ -24,6 +21,7 @@ public class PlatoInsumo {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_plato", nullable = false)
+    @JsonIgnore
     private Plato plato;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -31,5 +29,5 @@ public class PlatoInsumo {
     private Insumo insumo;
 
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal cantidadUsada; // Cantidad que se usa del insumo por cada plato
+    private BigDecimal cantidadUsada;
 }

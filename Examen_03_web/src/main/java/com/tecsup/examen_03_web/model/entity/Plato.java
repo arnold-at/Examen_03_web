@@ -1,18 +1,17 @@
 package com.tecsup.examen_03_web.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.tecsup.examen_03_web.model.enums.TipoPlato;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Entidad que representa un plato del menú
- */
 @Entity
 @Table(name = "platos")
 @Data
@@ -46,6 +45,8 @@ public class Plato {
     @Column(nullable = false)
     private Boolean activo = true;
 
-    @OneToMany(mappedBy = "plato", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "plato", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @JsonIgnore
     private List<PlatoInsumo> insumos = new ArrayList<>();
 }

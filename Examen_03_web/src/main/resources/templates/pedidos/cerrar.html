@@ -371,11 +371,11 @@
                     </div>
                     <div class="info-item">
                         <div class="info-label">Hora</div>
-                        <div class="info-value" th:text="${#temporals.format(pedido.fechaPedido, 'HH:mm')}"></div>
+                        <div class="info-value" th:text="${#temporals.format(pedido.fechaHora, 'HH:mm')}"></div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Atendido por</div>
-                        <div class="info-value" th:text="${pedido.usuario.username}"></div>
+                        <div class="info-value" th:text="${pedido.usuarioRegistro.nombreUsuario}"></div>
                     </div>
                 </div>
 

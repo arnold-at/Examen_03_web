@@ -15,10 +15,11 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-/**
- * Controlador de Pedidos
- * ⭐ MÓDULO PRINCIPAL CON FUNCIONALIDAD COMPLETA ⭐
- */
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Controller
 @RequestMapping("/pedidos")
 @RequiredArgsConstructor
@@ -30,9 +31,6 @@ public class PedidoController {
     private final IPlatoService platoService;
     private final IAuthService authService;
 
-    /**
-     * Listar todos los pedidos
-     */
     @GetMapping
     public String listar(Model model) {
         model.addAttribute("pedidos", pedidoService.listarDelDia());
@@ -40,9 +38,6 @@ public class PedidoController {
         return "pedidos/lista";
     }
 
-    /**
-     * Formulario para crear nuevo pedido
-     */
     @GetMapping("/nuevo")
     public String formularioNuevo(Model model) {
         model.addAttribute("mesas", mesaService.listarDisponibles());
@@ -50,9 +45,6 @@ public class PedidoController {
         return "pedidos/nuevo";
     }
 
-    /**
-     * Crear nuevo pedido
-     */
     @PostMapping("/crear")
     public String crear(
             @RequestParam Long idMesa,
@@ -73,23 +65,30 @@ public class PedidoController {
         }
     }
 
-    /**
-     * Página para agregar platos a un pedido
-     */
     @GetMapping("/{id}/agregar-platos")
     public String agregarPlatos(@PathVariable Long id, Model model) {
         Pedido pedido = pedidoService.obtenerPorId(id);
+        pedido.getDetalles().size();
+
+        List<Map<String, Object>> platosDTO = platoService.listarDisponibles().stream()
+                .map(p -> {
+                    Map<String, Object> dto = new HashMap<>();
+                    dto.put("idPlato", p.getIdPlato());
+                    dto.put("nombre", p.getNombre());
+                    dto.put("precio", p.getPrecio());
+                    dto.put("categoria", p.getTipo() != null ? p.getTipo().toString() : "");
+                    dto.put("descripcion", p.getDescripcion() != null ? p.getDescripcion() : "");
+                    return dto;
+                })
+                .collect(Collectors.toList());
 
         model.addAttribute("pedido", pedido);
-        model.addAttribute("platos", platoService.listarDisponibles());
+        model.addAttribute("platos", platosDTO);
         model.addAttribute("usuario", authService.obtenerUsuarioActual());
 
         return "pedidos/agregar-platos";
     }
 
-    /**
-     * Agregar un plato al pedido
-     */
     @PostMapping("/{id}/agregar-plato")
     public String agregarPlato(
             @PathVariable Long id,
@@ -109,12 +108,10 @@ public class PedidoController {
         return "redirect:/pedidos/" + id + "/agregar-platos";
     }
 
-    /**
-     * Ver detalle de un pedido
-     */
     @GetMapping("/{id}")
     public String detalle(@PathVariable Long id, Model model) {
         Pedido pedido = pedidoService.obtenerPorId(id);
+        pedido.getDetalles().size();
 
         model.addAttribute("pedido", pedido);
         model.addAttribute("usuario", authService.obtenerUsuarioActual());
@@ -122,9 +119,6 @@ public class PedidoController {
         return "pedidos/detalle";
     }
 
-    /**
-     * Cambiar estado del pedido
-     */
     @PostMapping("/{id}/cambiar-estado")
     public String cambiarEstado(
             @PathVariable Long id,
@@ -142,12 +136,10 @@ public class PedidoController {
         return "redirect:/pedidos/" + id;
     }
 
-    /**
-     * Cerrar pedido y generar factura
-     */
     @GetMapping("/{id}/cerrar")
     public String formularioCerrar(@PathVariable Long id, Model model) {
         Pedido pedido = pedidoService.obtenerPorId(id);
+        pedido.getDetalles().size();
 
         model.addAttribute("pedido", pedido);
         model.addAttribute("metodosPago", MetodoPago.values());
@@ -156,9 +148,6 @@ public class PedidoController {
         return "pedidos/cerrar";
     }
 
-    /**
-     * Procesar cierre de pedido
-     */
     @PostMapping("/{id}/cerrar")
     public String cerrar(
             @PathVariable Long id,
@@ -180,9 +169,6 @@ public class PedidoController {
         }
     }
 
-    /**
-     * Cancelar pedido
-     */
     @PostMapping("/{id}/cancelar")
     public String cancelar(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
@@ -196,9 +182,6 @@ public class PedidoController {
         return "redirect:/pedidos";
     }
 
-    /**
-     * Eliminar pedido (solo si está pendiente)
-     */
     @PostMapping("/{id}/eliminar")
     public String eliminar(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
@@ -212,9 +195,6 @@ public class PedidoController {
         return "redirect:/pedidos";
     }
 
-    /**
-     * Vista de cocina - Pedidos pendientes y en preparación
-     */
     @GetMapping("/cocina")
     public String cocina(Model model) {
         model.addAttribute("pedidos", pedidoService.listarParaCocina());
@@ -222,9 +202,6 @@ public class PedidoController {
         return "pedidos/cocina";
     }
 
-    /**
-     * Listar pedidos por estado
-     */
     @GetMapping("/estado/{estado}")
     public String listarPorEstado(@PathVariable EstadoPedido estado, Model model) {
         model.addAttribute("pedidos", pedidoService.listarPorEstado(estado));
