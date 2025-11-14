@@ -48,21 +48,24 @@
                             <td><strong>S/ <span th:text="${#numbers.formatDecimal(pedido.total, 1, 2)}">0.00</span></strong></td>
                             <td>
                                 <span class="badge"
-                                      th:classappend="${pedido.estado.name() == 'PENDIENTE'} ? 'badge-pendiente' :
-                                                      ${pedido.estado.name() == 'EN_PREPARACION'} ? 'badge-preparacion' :
-                                                      ${pedido.estado.name() == 'SERVIDO'} ? 'badge-servido' :
-                                                      ${pedido.estado.name() == 'CERRADO'} ? 'badge-cerrado' : 'badge-cancelado'"
+                                      th:classappend="${
+                                          (pedido.estado.name() == 'PENDIENTE') ? 'badge-pendiente' :
+                                          ((pedido.estado.name() == 'EN_PREPARACION') ? 'badge-preparacion' :
+                                          ((pedido.estado.name() == 'SERVIDO') ? 'badge-servido' :
+                                          ((pedido.estado.name() == 'CERRADO') ? 'badge-cerrado' : 'badge-cancelado')))}"
                                       th:text="${pedido.estado.name()}">PENDIENTE</span>
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm">
-                                    <a th:href="@{/pedidos/{id}(id=${pedido.idPedido})}" class="btn btn-primary" title="Ver detalle">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
                                     <a th:href="@{/pedidos/{id}/agregar-platos(id=${pedido.idPedido})}"
                                        th:if="${pedido.estado.name() == 'PENDIENTE'}"
                                        class="btn btn-success" title="Agregar platos">
                                         <i class="fas fa-plus"></i>
+                                    </a>
+                                    <a th:href="@{/pedidos/{id}/cerrar(id=${pedido.idPedido})}"
+                                       th:if="${pedido.estado.name() != 'CERRADO' and pedido.estado.name() != 'CANCELADO'}"
+                                       class="btn btn-warning" title="Cerrar y Facturar">
+                                        <i class="fas fa-cash-register"></i>
                                     </a>
                                 </div>
                             </td>

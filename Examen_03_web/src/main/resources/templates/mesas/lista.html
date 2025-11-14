@@ -135,39 +135,36 @@
         <div id="gridView" class="row">
             <div class="col-md-4 col-lg-3 mb-4 mesa-item" th:each="mesa : ${mesas}">
                 <div class="card mesa-card h-100"
-                     th:classappend="${mesa.estado.name() == 'DISPONIBLE' ? 'border-success' : mesa.estado.name() == 'OCUPADA' ? 'border-danger' : 'border-warning'}">
-                    <div class="card-body text-center">
-                        <div class="mesa-icon mb-3">
-                            <i class="fas fa-chair fa-3x"
-                               th:classappend="${mesa.estado.name() == 'DISPONIBLE' ? 'text-success' : mesa.estado.name() == 'OCUPADA' ? 'text-danger' : 'text-warning'}">
-                            </i>
-                        </div>
-                        <h4 class="card-title mb-2 fw-bold">
-                            Mesa <span th:text="${mesa.numero}">1</span>
-                        </h4>
-                        <span class="badge mb-3"
-                              th:classappend="${mesa.estado.name() == 'DISPONIBLE' ? 'badge-disponible' : mesa.estado.name() == 'OCUPADA' ? 'badge-ocupada' : 'badge-reservada'}"
-                              th:text="${mesa.estado.name()}">
-                            DISPONIBLE
-                        </span>
-                        <div class="mesa-info text-start px-3">
-                            <p class="mb-2">
-                                <i class="fas fa-users text-muted me-2"></i>
-                                <strong>Capacidad:</strong>
-                                <span th:text="${mesa.capacidad} + ' personas'">4 personas</span>
-                            </p>
-                            <p class="mb-0" th:if="${mesa.ubicacion}">
-                                <i class="fas fa-map-marker-alt text-muted me-2"></i>
-                                <strong>Ubicación:</strong>
-                                <span th:text="${mesa.ubicacion}">Planta Baja</span>
-                            </p>
-                        </div>
+                     th:classappend="${(mesa.estado.name() == 'DISPONIBLE') ? 'border-success' :
+                                       ((mesa.estado.name() == 'OCUPADA') ? 'border-danger' : 'border-warning')}"> <div class="card-body text-center">
+                    <div class="mesa-icon mb-3">
+                        <i class="fas fa-chair fa-3x"
+                           th:classappend="${(mesa.estado.name() == 'DISPONIBLE') ? 'text-success' :
+                                                 ((mesa.estado.name() == 'OCUPADA') ? 'text-danger' : 'text-warning')}"> </i>
                     </div>
+                    <h4 class="card-title mb-2 fw-bold">
+                        Mesa <span th:text="${mesa.numero}">1</span>
+                    </h4>
+                    <span class="badge mb-3"
+                          th:classappend="${(mesa.estado.name() == 'DISPONIBLE') ? 'badge-disponible' :
+                                                ((mesa.estado.name() == 'OCUPADA') ? 'badge-ocupada' : 'badge-reservada')}"
+                          th:text="${mesa.estado.name()}"> DISPONIBLE
+                        </span>
+                    <div class="mesa-info text-start px-3">
+                        <p class="mb-2">
+                            <i class="fas fa-users text-muted me-2"></i>
+                            <strong>Capacidad:</strong>
+                            <span th:text="${mesa.capacidad} + ' personas'">4 personas</span>
+                        </p>
+                        <p class="mb-0" th:if="${mesa.ubicacion}">
+                            <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                            <strong>Ubicación:</strong>
+                            <span th:text="${mesa.ubicacion}">Planta Baja</span>
+                        </p>
+                    </div>
+                </div>
                     <div class="card-footer bg-white border-top">
                         <div class="d-grid gap-2">
-                            <a th:href="@{/mesas/{id}(id=${mesa.idMesa})}" class="btn btn-sm btn-primary">
-                                <i class="fas fa-eye me-1"></i>Ver Detalles
-                            </a>
                             <div class="btn-group" role="group" sec:authorize="hasAnyRole('ADMIN', 'MOZO')">
                                 <button type="button" class="btn btn-sm btn-success"
                                         th:if="${mesa.estado.name() != 'OCUPADA'}"
@@ -215,17 +212,13 @@
                             <td th:text="${mesa.ubicacion} ?: '-'">Planta Baja</td>
                             <td>
                                 <span class="badge"
-                                      th:classappend="${mesa.estado.name() == 'DISPONIBLE' ? 'badge-disponible' : mesa.estado.name() == 'OCUPADA' ? 'badge-ocupada' : 'badge-reservada'}"
-                                      th:text="${mesa.estado.name()}">
-                                    DISPONIBLE
+                                      th:classappend="${(mesa.estado.name() == 'DISPONIBLE') ? 'badge-disponible' :
+                                                        ((mesa.estado.name() == 'OCUPADA') ? 'badge-ocupada' : 'badge-reservada')}"
+                                      th:text="${mesa.estado.name()}"> DISPONIBLE
                                 </span>
                             </td>
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <a th:href="@{/mesas/{id}(id=${mesa.idMesa})}"
-                                       class="btn btn-primary" title="Ver detalles">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
                                     <button type="button" class="btn btn-success"
                                             th:if="${mesa.estado.name() != 'OCUPADA'}"
                                             th:onclick="'asignarMesa(' + ${mesa.idMesa} + ')'"
@@ -313,8 +306,23 @@
         cards.forEach(card => {
             let mostrar = true;
             const cardText = card.textContent.toLowerCase();
+
+            // 1. Filtrado por búsqueda y estado
             if (search && !cardText.includes(search)) { mostrar = false; }
             if (estado && !cardText.includes(estado.toLowerCase())) { mostrar = false; }
+
+            // 2. Filtrado por capacidad mínima (Corregido a JS nativo)
+            if (capacidadMin) {
+                // Buscamos el <span> que contiene el valor de la capacidad (ej: "4 personas")
+                const capacidadElement = card.querySelector('.mesa-info p:nth-child(1) span');
+
+                if (capacidadElement) {
+                    // Extraemos solo el número
+                    const capacidadMesa = parseInt(capacidadElement.textContent.replace(' personas', '').trim());
+                    if (capacidadMesa < parseInt(capacidadMin)) { mostrar = false; }
+                }
+            }
+
             card.style.display = mostrar ? '' : 'none';
         });
         actualizarContador();
@@ -397,7 +405,10 @@
             }
         });
     }
-    document.addEventListener('DOMContentLoaded', function() { actualizarContador(); });
+    document.addEventListener('DOMContentLoaded', function() {
+        actualizarContador();
+        cambiarVista('grid'); // Asegura que la vista de tarjetas cargue por defecto
+    });
 </script>
 </body>
 </html>

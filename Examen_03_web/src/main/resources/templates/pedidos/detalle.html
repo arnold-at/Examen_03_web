@@ -3,16 +3,12 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/header :: header}"></head>
 <body>
-<!-- Navbar -->
 <div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <div class="d-flex">
-    <!-- Sidebar -->
     <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
-    <!-- Main Content -->
     <div class="main-content flex-grow-1 p-4">
-        <!-- Breadcrumb -->
         <nav aria-label="breadcrumb" class="mb-4">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
@@ -21,7 +17,6 @@
             </ol>
         </nav>
 
-        <!-- Header con Acciones -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h2 class="mb-1">
@@ -68,7 +63,6 @@
         </div>
 
         <div class="row">
-            <!-- Información de la Mesa -->
             <div class="col-lg-4 mb-4">
                 <div class="card">
                     <div class="card-header">
@@ -77,7 +71,6 @@
                         </h5>
                     </div>
                     <div class="card-body">
-                        <!-- Icono de Mesa -->
                         <div class="text-center mb-4">
                             <div class="mesa-icon-large">
                                 <i class="fas fa-chair fa-5x"
@@ -87,7 +80,6 @@
                             </div>
                         </div>
 
-                        <!-- Detalles -->
                         <div class="info-row">
                             <label><i class="fas fa-hashtag me-2"></i>Número:</label>
                             <span th:text="${mesa.numero}">1</span>
@@ -120,7 +112,6 @@
                     </div>
                 </div>
 
-                <!-- Estadísticas de la Mesa -->
                 <div class="card mt-4">
                     <div class="card-header">
                         <h5 class="mb-0">
@@ -167,7 +158,6 @@
                 </div>
             </div>
 
-            <!-- Historial de Pedidos -->
             <div class="col-lg-8 mb-4">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
@@ -194,7 +184,6 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <!-- Tabla de Pedidos -->
                         <div class="table-responsive" th:if="${!#lists.isEmpty(pedidos)}">
                             <table class="table table-hover">
                                 <thead>
@@ -243,7 +232,6 @@
                             </table>
                         </div>
 
-                        <!-- Mensaje cuando no hay pedidos -->
                         <div class="alert alert-info text-center" th:if="${#lists.isEmpty(pedidos)}">
                             <i class="fas fa-info-circle fa-2x mb-3"></i>
                             <h5>No hay pedidos registrados</h5>
@@ -252,7 +240,6 @@
                     </div>
                 </div>
 
-                <!-- Pedido Activo -->
                 <div class="card mt-4" th:if="${pedidoActivo != null}">
                     <div class="card-header bg-warning text-dark">
                         <h5 class="mb-0">
@@ -290,8 +277,15 @@
                         <hr>
                         <div class="d-grid gap-2">
                             <a th:href="@{/pedidos/{id}(id=${pedidoActivo.id})}"
-                               class="btn btn-primary">
+                               class="btn btn-primary mb-2">
                                 <i class="fas fa-eye me-2"></i>Ver Pedido Completo
+                            </a>
+
+                            <a th:href="@{/pedidos/{id}/cerrar(id=${pedidoActivo.id})}"
+                               class="btn btn-success"
+                               th:if="${pedidoActivo.estado.name() == 'SERVIDO'}"
+                               sec:authorize="hasAnyRole('ADMIN', 'CAJERO')">
+                                <i class="fas fa-money-bill-wave me-2"></i>Cerrar Pedido (Pagar)
                             </a>
                         </div>
                     </div>
@@ -301,9 +295,7 @@
     </div>
 </div>
 
-<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script th:inline="javascript">
@@ -318,6 +310,7 @@
     function verPedidoActivo() {
         const pedidoActivoId = /*[[${pedidoActivo?.id}]]*/ null;
         if (pedidoActivoId) {
+            // Este es el enlace que lleva a /pedidos/{id}, donde debe aparecer el botón de cerrar.
             window.location.href = `/pedidos/${pedidoActivoId}`;
         }
     }

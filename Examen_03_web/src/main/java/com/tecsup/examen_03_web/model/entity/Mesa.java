@@ -5,10 +5,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalDateTime; // Necesario para la fecha/hora
 
-/**
- * Entidad que representa una mesa del restaurante
- */
 @Entity
 @Table(name = "mesas")
 @Data
@@ -32,4 +30,13 @@ public class Mesa {
 
     @Column(length = 200)
     private String ubicacion;
+
+    @Column(length = 100)
+    private String nombreClienteReserva;
+
+    @Column(length = 20)
+    private String telefonoClienteReserva;
+
+    private LocalDateTime fechaHoraReserva;
+
 }

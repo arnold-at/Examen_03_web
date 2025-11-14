@@ -33,7 +33,7 @@ public class PedidoController {
 
     @GetMapping
     public String listar(Model model) {
-        model.addAttribute("pedidos", pedidoService.listarDelDia());
+        model.addAttribute("pedidos", pedidoService.listarPedidosActivos());
         model.addAttribute("usuario", authService.obtenerUsuarioActual());
         return "pedidos/lista";
     }

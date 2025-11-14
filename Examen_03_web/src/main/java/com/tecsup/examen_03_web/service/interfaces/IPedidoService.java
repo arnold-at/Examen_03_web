@@ -3,6 +3,7 @@ package com.tecsup.examen_03_web.service.interfaces;
 import com.tecsup.examen_03_web.model.entity.Pedido;
 import com.tecsup.examen_03_web.model.enums.EstadoPedido;
 import com.tecsup.examen_03_web.model.enums.MetodoPago;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -46,6 +47,9 @@ public interface IPedidoService {
      * Listar todos los pedidos
      */
     List<Pedido> listarTodos();
+
+    @Transactional(readOnly = true)
+    List<Pedido> listarPedidosActivos();
 
     /**
      * Listar pedidos por estado

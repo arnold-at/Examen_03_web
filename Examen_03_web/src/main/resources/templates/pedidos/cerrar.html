@@ -6,10 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cerrar Pedido - Restaurant</title>
 
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
@@ -307,12 +305,9 @@
     </style>
 </head>
 <body>
-<!-- Sidebar -->
 <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
-<!-- Main Content -->
 <div class="main-content">
-    <!-- Page Header -->
     <div class="page-header">
         <h1>
             <i class="fas fa-cash-register"></i>
@@ -320,7 +315,6 @@
         </h1>
     </div>
 
-    <!-- Step Indicator -->
     <div class="step-indicator">
         <div class="step completed">
             <div class="step-number"><i class="fas fa-check"></i></div>
@@ -338,7 +332,6 @@
         </div>
     </div>
 
-    <!-- Alerts -->
     <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="fas fa-check-circle me-2"></i>
         <span th:text="${success}"></span>
@@ -353,7 +346,6 @@
 
     <div class="row">
         <div class="col-lg-8">
-            <!-- Resumen del Pedido -->
             <div class="resumen-card">
                 <div class="card-title">
                     <i class="fas fa-receipt"></i>
@@ -422,7 +414,6 @@
         </div>
 
         <div class="col-lg-4">
-            <!-- Método de Pago -->
             <div class="payment-methods">
                 <div class="card-title">
                     <i class="fas fa-credit-card"></i>
@@ -438,20 +429,26 @@
                                required>
                         <label th:for="'metodo-' + ${metodo}" style="cursor: pointer; margin: 0; flex: 1; display: flex; align-items: center; gap: 15px;">
                             <div class="payment-icon">
-                                <i th:class="${metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).EFECTIVO ? 'fas fa-money-bill-wave' :
-                                                   metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).TARJETA ? 'fas fa-credit-card' :
-                                                   metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).YAPE ? 'fas fa-mobile-alt' :
-                                                   'fas fa-wallet'}"></i>
+                                <i th:class="${
+                                    (metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).EFECTIVO) ? 'fas fa-money-bill-wave' :
+                                    ((metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).TARJETA) ? 'fas fa-credit-card' :
+                                    ((metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).YAPE) ? 'fas fa-mobile-alt' :
+                                    'fas fa-wallet'))
+                                }"></i>
                             </div>
                             <div class="payment-info">
-                                <div class="payment-name" th:text="${metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).EFECTIVO ? 'Efectivo' :
-                                                                               metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).TARJETA ? 'Tarjeta' :
-                                                                               metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).YAPE ? 'Yape' :
-                                                                               metodo}"></div>
-                                <div class="payment-description" th:text="${metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).EFECTIVO ? 'Pago en efectivo' :
-                                                                                       metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).TARJETA ? 'Débito o crédito' :
-                                                                                       metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).YAPE ? 'Pago móvil' :
-                                                                                       'Otro método'}"></div>
+                                <div class="payment-name" th:text="${
+                                    (metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).EFECTIVO) ? 'Efectivo' :
+                                    ((metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).TARJETA) ? 'Tarjeta' :
+                                    ((metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).YAPE) ? 'Yape' :
+                                    metodo))
+                                }"></div>
+                                <div class="payment-description" th:text="${
+                                    (metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).EFECTIVO) ? 'Pago en efectivo' :
+                                    ((metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).TARJETA) ? 'Débito o crédito' :
+                                    ((metodo == T(com.tecsup.examen_03_web.model.enums.MetodoPago).YAPE) ? 'Pago móvil' :
+                                    'Otro método'))
+                                }"></div>
                             </div>
                         </label>
                     </div>
@@ -470,11 +467,9 @@
     </div>
 </div>
 
-<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    // Highlight selected payment method
     document.querySelectorAll('input[name="metodoPago"]').forEach(radio => {
         radio.addEventListener('change', function() {
             document.querySelectorAll('.payment-option').forEach(opt => {

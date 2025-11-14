@@ -15,10 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 
-/**
- * Implementación del servicio de pedidos
- * ⭐ MÓDULO PRINCIPAL CON LÓGICA COMPLETA ⭐
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -40,7 +36,6 @@ public class PedidoServiceImpl implements IPedidoService {
     public Pedido crearPedido(Long idMesa, Long idCliente, Long idUsuario, String observaciones) {
         log.info("Creando pedido para mesa: {}", idMesa);
 
-        // Validar y obtener mesa
         Mesa mesa = mesaRepository.findById(idMesa)
                 .orElseThrow(() -> new RuntimeException("Mesa no encontrada"));
 
@@ -48,17 +43,14 @@ public class PedidoServiceImpl implements IPedidoService {
             throw new RuntimeException("La mesa no está disponible");
         }
 
-        // Obtener usuario
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // Cliente opcional
         Cliente cliente = null;
         if (idCliente != null) {
             cliente = clienteRepository.findById(idCliente).orElse(null);
         }
 
-        // Crear el pedido
         Pedido pedido = new Pedido();
         pedido.setMesa(mesa);
         pedido.setCliente(cliente);
@@ -67,14 +59,11 @@ public class PedidoServiceImpl implements IPedidoService {
         pedido.setObservaciones(observaciones);
         pedido.setTotal(BigDecimal.ZERO);
 
-        // Cambiar estado de la mesa a OCUPADA
         mesa.setEstado(EstadoMesa.OCUPADA);
         mesaRepository.save(mesa);
 
-        // Guardar pedido
         Pedido pedidoGuardado = pedidoRepository.save(pedido);
 
-        // Registrar en bitácora
         bitacoraService.registrar(usuario, "PEDIDOS", "CREAR",
                 "Creó pedido #" + pedidoGuardado.getIdPedido() + " para mesa " + mesa.getNumero());
 
@@ -87,7 +76,6 @@ public class PedidoServiceImpl implements IPedidoService {
     public Pedido agregarPlato(Long idPedido, Long idPlato, Integer cantidad, String observaciones) {
         log.info("Agregando plato {} al pedido {}", idPlato, idPedido);
 
-        // Validar pedido
         Pedido pedido = pedidoRepository.findById(idPedido)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
@@ -96,7 +84,6 @@ public class PedidoServiceImpl implements IPedidoService {
             throw new RuntimeException("No se puede agregar platos a un pedido cerrado o cancelado");
         }
 
-        // Validar plato
         Plato plato = platoRepository.findById(idPlato)
                 .orElseThrow(() -> new RuntimeException("Plato no encontrado"));
 
@@ -104,10 +91,8 @@ public class PedidoServiceImpl implements IPedidoService {
             throw new RuntimeException("El plato no está disponible");
         }
 
-        // Verificar stock de insumos
         verificarStockInsumos(plato, cantidad);
 
-        // Crear detalle del pedido
         DetallePedido detalle = new DetallePedido();
         detalle.setPedido(pedido);
         detalle.setPlato(plato);
@@ -116,17 +101,13 @@ public class PedidoServiceImpl implements IPedidoService {
         detalle.setObservaciones(observaciones);
         detalle.calcularSubtotal();
 
-        // Guardar detalle
         detallePedidoRepository.save(detalle);
 
-        // Descontar insumos del inventario
         descontarInsumos(plato, cantidad);
 
-        // Recalcular total del pedido
         pedido.calcularTotal();
         Pedido pedidoActualizado = pedidoRepository.save(pedido);
 
-        // Registrar en bitácora
         bitacoraService.registrar(pedido.getUsuarioRegistro(), "PEDIDOS", "EDITAR",
                 "Agregó " + cantidad + "x " + plato.getNombre() + " al pedido #" + idPedido);
 
@@ -142,13 +123,11 @@ public class PedidoServiceImpl implements IPedidoService {
         Pedido pedido = pedidoRepository.findById(idPedido)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
-        // Validar transiciones de estado
         validarTransicionEstado(pedido.getEstado(), nuevoEstado);
 
         pedido.setEstado(nuevoEstado);
         Pedido pedidoActualizado = pedidoRepository.save(pedido);
 
-        // Registrar en bitácora
         bitacoraService.registrar(pedido.getUsuarioRegistro(), "PEDIDOS", "EDITAR",
                 "Cambió estado del pedido #" + idPedido + " a " + nuevoEstado);
 
@@ -172,19 +151,15 @@ public class PedidoServiceImpl implements IPedidoService {
             throw new RuntimeException("No se puede cerrar un pedido sin platos");
         }
 
-        // Cambiar estado a CERRADO
         pedido.setEstado(EstadoPedido.CERRADO);
         pedidoRepository.save(pedido);
 
-        // Liberar la mesa
         Mesa mesa = pedido.getMesa();
         mesa.setEstado(EstadoMesa.DISPONIBLE);
         mesaRepository.save(mesa);
 
-        // Generar factura automáticamente
         generarFactura(pedido, metodoPago);
 
-        // Registrar en bitácora
         bitacoraService.registrar(pedido.getUsuarioRegistro(), "PEDIDOS", "CERRAR",
                 "Cerró pedido #" + idPedido + " - Total: S/. " + pedido.getTotal());
 
@@ -204,21 +179,17 @@ public class PedidoServiceImpl implements IPedidoService {
             throw new RuntimeException("No se puede cancelar un pedido cerrado");
         }
 
-        // Devolver insumos al stock
         for (DetallePedido detalle : pedido.getDetalles()) {
             devolverInsumos(detalle.getPlato(), detalle.getCantidad());
         }
 
-        // Cambiar estado
         pedido.setEstado(EstadoPedido.CANCELADO);
         pedidoRepository.save(pedido);
 
-        // Liberar la mesa
         Mesa mesa = pedido.getMesa();
         mesa.setEstado(EstadoMesa.DISPONIBLE);
         mesaRepository.save(mesa);
 
-        // Registrar en bitácora
         bitacoraService.registrar(pedido.getUsuarioRegistro(), "PEDIDOS", "CANCELAR",
                 "Canceló pedido #" + idPedido);
 
@@ -237,6 +208,12 @@ public class PedidoServiceImpl implements IPedidoService {
     @Transactional(readOnly = true)
     public List<Pedido> listarTodos() {
         return pedidoRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<Pedido> listarPedidosActivos() {
+        return pedidoRepository.findPedidosActivos();
     }
 
     @Override
@@ -279,23 +256,16 @@ public class PedidoServiceImpl implements IPedidoService {
             throw new RuntimeException("Solo se pueden eliminar pedidos en estado PENDIENTE");
         }
 
-        // Liberar mesa
         Mesa mesa = pedido.getMesa();
         mesa.setEstado(EstadoMesa.DISPONIBLE);
         mesaRepository.save(mesa);
 
         pedidoRepository.delete(pedido);
 
-        // Registrar en bitácora
         bitacoraService.registrar(pedido.getUsuarioRegistro(), "PEDIDOS", "ELIMINAR",
                 "Eliminó pedido #" + idPedido);
     }
 
-    // ==================== MÉTODOS PRIVADOS ====================
-
-    /**
-     * Verificar si hay suficiente stock de insumos para preparar el plato
-     */
     private void verificarStockInsumos(Plato plato, Integer cantidad) {
         List<PlatoInsumo> insumos = platoInsumoRepository.findByPlato_IdPlato(plato.getIdPlato());
 
@@ -311,9 +281,6 @@ public class PedidoServiceImpl implements IPedidoService {
         }
     }
 
-    /**
-     * Descontar insumos del inventario
-     */
     private void descontarInsumos(Plato plato, Integer cantidad) {
         List<PlatoInsumo> insumos = platoInsumoRepository.findByPlato_IdPlato(plato.getIdPlato());
 
@@ -330,9 +297,6 @@ public class PedidoServiceImpl implements IPedidoService {
         }
     }
 
-    /**
-     * Devolver insumos al inventario (cuando se cancela un pedido)
-     */
     private void devolverInsumos(Plato plato, Integer cantidad) {
         List<PlatoInsumo> insumos = platoInsumoRepository.findByPlato_IdPlato(plato.getIdPlato());
 
@@ -346,22 +310,17 @@ public class PedidoServiceImpl implements IPedidoService {
         }
     }
 
-    /**
-     * Generar factura automáticamente al cerrar un pedido
-     */
     private void generarFactura(Pedido pedido, MetodoPago metodoPago) {
         Factura factura = new Factura();
         factura.setPedido(pedido);
         factura.setMetodoPago(metodoPago);
         factura.setSubtotal(pedido.getTotal());
 
-        // Calcular IGV (18% en Perú)
         BigDecimal igv = pedido.getTotal().multiply(BigDecimal.valueOf(0.18));
         factura.setIgv(igv);
         factura.setTotal(pedido.getTotal().add(igv));
         factura.setPagado(true);
 
-        // Crear detalles de factura
         for (DetallePedido detalle : pedido.getDetalles()) {
             DetalleFactura detalleFactura = new DetalleFactura();
             detalleFactura.setFactura(factura);
@@ -376,20 +335,11 @@ public class PedidoServiceImpl implements IPedidoService {
         log.info("Factura generada para pedido #{}", pedido.getIdPedido());
     }
 
-    /**
-     * Validar transiciones de estado válidas
-     */
     private void validarTransicionEstado(EstadoPedido estadoActual, EstadoPedido nuevoEstado) {
-        // PENDIENTE → EN_PREPARACION, CANCELADO
-        // EN_PREPARACION → SERVIDO, CANCELADO
-        // SERVIDO → CERRADO
-        // CERRADO y CANCELADO no pueden cambiar
-
         if (estadoActual.equals(EstadoPedido.CERRADO) || estadoActual.equals(EstadoPedido.CANCELADO)) {
             throw new RuntimeException("No se puede cambiar el estado de un pedido cerrado o cancelado");
         }
 
-        // Validaciones específicas (opcional, puedes agregar más)
         if (estadoActual.equals(EstadoPedido.SERVIDO) && !nuevoEstado.equals(EstadoPedido.CERRADO)) {
             throw new RuntimeException("Un pedido servido solo puede pasar a CERRADO");
         }

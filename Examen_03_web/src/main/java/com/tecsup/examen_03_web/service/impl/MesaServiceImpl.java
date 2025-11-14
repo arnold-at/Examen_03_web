@@ -9,11 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Implementación del servicio de mesas
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -57,6 +55,47 @@ public class MesaServiceImpl implements IMesaService {
     @Override
     @Transactional
     public Mesa liberarMesa(Long idMesa) {
-        return cambiarEstado(idMesa, EstadoMesa.DISPONIBLE);
+        Mesa mesa = obtenerPorId(idMesa);
+
+        mesa.setEstado(EstadoMesa.DISPONIBLE);
+        return mesaRepository.save(mesa);
+    }
+
+    @Transactional
+    @Override
+    public Mesa reservarMesa(Long idMesa, String nombreCliente, String telefonoCliente, LocalDateTime fechaHoraReserva) {
+        Mesa mesa = obtenerPorId(idMesa);
+
+        if (mesa.getEstado() != EstadoMesa.DISPONIBLE) {
+            throw new RuntimeException("La mesa no está disponible para reservar.");
+        }
+
+        mesa.setEstado(EstadoMesa.RESERVADA);
+
+        return mesaRepository.save(mesa);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public long contarTotal() {
+        return mesaRepository.count();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public long contarDisponibles() {
+        return mesaRepository.countByEstado(EstadoMesa.DISPONIBLE);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public long contarOcupadas() {
+        return mesaRepository.countByEstado(EstadoMesa.OCUPADA);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public long contarReservadas() {
+        return mesaRepository.countByEstado(EstadoMesa.RESERVADA);
     }
 }

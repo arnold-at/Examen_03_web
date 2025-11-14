@@ -5,10 +5,6 @@ import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Configuración de ModelMapper
- * Facilita la conversión entre entidades y DTOs
- */
 @Configuration
 public class ModelMapperConfig {
 
